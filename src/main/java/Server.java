@@ -74,6 +74,18 @@ public class Server {
             String response;
 
             switch (command) {
+                case "reserve":
+                    //TODO: Reserve seats
+                    break;
+                case "cancel":
+                    //TODO: Cancel seats
+                    break;
+                case "view":
+                    //TODO: view
+                    break;
+                case "log":
+                    //TODO: log
+                    break;
                 case "exit":
                     System.exit(0);
                 default:
