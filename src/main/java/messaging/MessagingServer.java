@@ -1,6 +1,7 @@
 package messaging;
 
 import messaging.helpers.Message;
+import roles.Proposer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class MessagingServer {
                         break;
                     case 4:
                         System.out.println("Received an nack for proposal");
+                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
                         break;
                     case 5:
@@ -60,7 +62,7 @@ public class MessagingServer {
                         break;
                     case 6:
                         System.out.println("Recieved an ack for proposal");
-                        //TODO: Proposal was accepted!!. Let the proposer know
+                        Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 7:
                         System.out.println("Recieved nack for accept message");

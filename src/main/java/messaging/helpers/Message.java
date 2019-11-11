@@ -1,16 +1,29 @@
 package messaging.helpers;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Message implements Serializable {
 
     int messageType;
+    int from;
+
+    public int getFrom() {
+        return from;
+    }
+
+    public void setFrom(int from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    String to;
 
 
     public int getMessageType() {
