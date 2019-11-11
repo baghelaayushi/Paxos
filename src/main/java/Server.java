@@ -3,19 +3,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import helpers.Site;
+import messaging.MessagingServer;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Server {
 
     private static int number_of_hosts = -1;
     private static HashMap<String, Site> siteHashMap = new HashMap<>();
     private static Site mySite = null;
+    private static List<String> log = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -23,6 +23,8 @@ public class Server {
         acceptUserInput();
 
     }
+
+
 
     public static void bootstrapProject(String selfIdentifier){
 
@@ -62,6 +64,17 @@ public class Server {
 
     private static void initialize() throws Exception{
 
+        MessagingServer server = new MessagingServer(mySite.getRandomPort());
+
+        new Thread(() -> {
+            try {
+                server.listen();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+
     }
 
     private static void acceptUserInput() {
@@ -93,4 +106,6 @@ public class Server {
 
         }
     }
+
+
 }
