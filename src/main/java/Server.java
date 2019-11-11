@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import helpers.Site;
 import messaging.MessagingServer;
+import roles.Proposer;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -16,6 +17,8 @@ public class Server {
     private static HashMap<String, Site> siteHashMap = new HashMap<>();
     private static Site mySite = null;
     private static List<String> log = new ArrayList<>();
+
+    private static Proposer proposer = null;
 
     public static void main(String[] args) {
 
@@ -66,6 +69,8 @@ public class Server {
 
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
+        proposer = Proposer.getInstance(mySite,log, siteHashMap);
+
         new Thread(() -> {
             try {
                 server.listen();
@@ -89,6 +94,7 @@ public class Server {
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
+                    proposer.initiateProposal(command);
                     break;
                 case "cancel":
                     //TODO: Cancel seats

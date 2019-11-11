@@ -35,13 +35,15 @@ public class MessagingServer {
                 Message message = (Message) is.readObject();
 
 
+                System.out.println(message.getMessageType());
+
                 switch (message.getMessageType()){
                     case 1:
                         System.out.println("Received a prepare message");
                         //TODO:Go to acceptor
                         break;
                     case 2:
-                        System.out.println("Recieved an accept message");
+                        System.out.println("Received an accept message");
                         //TODO: Go to acceptor
                         break;
                     case 3:

@@ -12,12 +12,13 @@ import java.util.Map;
 
 public class Proposer {
 
-    Proposer instance = null;
+    static Proposer instance = null;
 
     Site site = null;
     int maxPrepare = -1;
     List<String> log = null;
     HashMap<String, Site> siteHashMap = null;
+    String currentValue = null;
 
 
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
@@ -27,14 +28,14 @@ public class Proposer {
         this.log = log;
         this.siteHashMap = siteMap;
     }
-    public Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
+    public static Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
         if (instance == null){
             instance = new Proposer(siteInformation, log, siteMap);
         }
         return instance;
     }
 
-    public String getProposalNumber(){
+    private String getProposalNumber(){
 
         //get Proposal Value
         maxPrepare++;
@@ -45,7 +46,7 @@ public class Proposer {
         return proposalNumber;
     }
 
-    public void sendPrepare(){
+    private void sendPrepare(){
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
@@ -68,16 +69,28 @@ public class Proposer {
     }
 
 
-    public Message composeProposal(){
+    private Message composeProposal(){
 
         PrepareMessage proposalMessage = new PrepareMessage();
         proposalMessage.setProposalNumber(getProposalNumber());
         proposalMessage.setMessageType(1);
-
         return proposalMessage;
 
     }
 
+    public void initiateProposal(String reservation){
+
+        String input[] = reservation.split(" ");
+        String clientName = input[1];
+        String flightNumbers[] = input[2].split(",");
+
+        sendPrepare();
+
+        currentValue = reservation;
+        //TODO : Figure out how multiple requests will be handled here
+
+
+    }
 
 
     public void sendAccept(){
