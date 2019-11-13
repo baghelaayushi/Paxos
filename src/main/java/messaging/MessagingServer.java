@@ -1,6 +1,7 @@
 package messaging;
 
 import messaging.helpers.Message;
+import roles.Acceptor;
 import roles.Proposer;
 
 import java.io.ByteArrayInputStream;
@@ -14,10 +15,12 @@ public class MessagingServer {
 
     private DatagramSocket udpSocket;
     private int port;
+    private Acceptor acceptor;
 
     public MessagingServer(int port) throws SocketException, IOException {
         this.port = port;
         this.udpSocket = new DatagramSocket(this.port);
+        //need to change this(probably create an object in server class)
     }
 
 

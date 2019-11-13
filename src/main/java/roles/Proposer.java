@@ -61,11 +61,13 @@ public class Proposer {
                 int port = client.getValue().getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
-
+                //to send a propose message to acceptor
                 if(stage == 1){
                     String proposalNumber = getProposalNumber();
                     mClient.send(composeProposal(proposalNumber));
                 }
+
+                // to send an accept message to acceptors
                 if(stage == 2)
                     mClient.send(composeAccept());
                 mClient.close();

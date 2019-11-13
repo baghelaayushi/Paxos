@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import helpers.Site;
 import messaging.MessagingServer;
+import roles.Acceptor;
 import roles.Proposer;
 
 import java.io.BufferedReader;
@@ -19,6 +20,7 @@ public class Server {
     private static List<String> log = new ArrayList<>();
 
     private static Proposer proposer = null;
+    private static Acceptor acceptor = null;
 
     public static void main(String[] args) {
 
@@ -70,6 +72,8 @@ public class Server {
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
         proposer = Proposer.getInstance(mySite,log, siteHashMap);
+
+        acceptor = Acceptor.getInstance(mySite,siteHashMap);
 
         new Thread(() -> {
             try {
