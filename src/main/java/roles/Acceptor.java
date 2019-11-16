@@ -114,10 +114,11 @@ public class Acceptor {
     public void processAcceptRequest(AcceptMessage message) {
 
         int sender = message.getFrom();
-        int proposalNumber = message.getProposalNumber();
+        String proposalNumber[] = message.getCompleteProposalNumber().split("-");
+        String proposed = proposalNumber[0] + proposalNumber[2];
         PrepareAck ackmessage = new PrepareAck();
         System.out.println(proposalNumber +"  "+ maxPrepare);
-        if (proposalNumber < maxPrepare) {
+        if (Integer.parseInt(proposed) < maxPrepare) {
             //sending max prepare in case of Nack
             ackmessage.setaccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
@@ -126,11 +127,11 @@ public class Acceptor {
 
         }
 
-        if (proposalNumber == maxPrepare) {
+        if (Integer.parseInt(proposed) == maxPrepare) {
             try {
                 accNum = String.valueOf(proposalNumber);
                 accValue = String.valueOf(message.getProposedValue());
-                maxPrepare = proposalNumber;
+                maxPrepare = Integer.parseInt(proposed);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
