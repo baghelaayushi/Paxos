@@ -97,6 +97,7 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
         ackmessage.setaccNum(accNum);
         ackmessage.setAccValue(accValue);
+        ackmessage.setFrom(site.getSiteNumber());
 
         if (Integer.parseInt(proposed) < maxPrepare) {
             ackmessage.setAck(false);
@@ -115,28 +116,34 @@ public class Acceptor {
         int sender = message.getFrom();
         int proposalNumber = message.getProposalNumber();
         PrepareAck ackmessage = new PrepareAck();
+        System.out.println(proposalNumber +"  "+ maxPrepare);
         if (proposalNumber < maxPrepare) {
             //sending max prepare in case of Nack
             ackmessage.setaccNum(String.valueOf(maxPrepare));
-            ackmessage.setMessageType('5');
+            ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             sendAckMessages(sender,ackmessage);
 
         }
 
         if (proposalNumber == maxPrepare) {
-            accNum = String.valueOf(proposalNumber);
-            accValue = String.valueOf(message.getProposedValue());
-            maxPrepare = proposalNumber;
-            ackmessage.setaccNum(accNum);
-            ackmessage.setAccValue(accValue);
-            ackmessage.setAck(true);
-            ackmessage.setMessageType('5');
-            //sending acceptance message to proposer
-            sendAckMessages(sender,ackmessage);
+            try {
+                accNum = String.valueOf(proposalNumber);
+                accValue = String.valueOf(message.getProposedValue());
+                maxPrepare = proposalNumber;
+                ackmessage.setaccNum(accNum);
+                ackmessage.setAccValue(accValue);
+                ackmessage.setAck(true);
+                ackmessage.setMessageType(6);
+                //sending acceptance message to proposer
+                sendAckMessages(sender, ackmessage);
+            }
+            catch (Exception e){
+                System.out.println(e);
+            }
 
             //sending acceptance to learners
-            sendMessages();
+            //sendMessages();
         }
 
     }
