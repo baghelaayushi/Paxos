@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Acceptor {
     static Acceptor instance = null;
-    int maxPrepare;
+    int maxPrepare = -1;
     static String accNum;
     static String accValue;
     HashMap<String, Site> siteHashMap = null;
@@ -94,6 +94,7 @@ public class Acceptor {
         System.out.println("message from sender:" + sender);
         String proposalNumber[] = message.getProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[2];
+        System.out.println("Recieved proposal with " +proposalNumber + "Max prepare is "+ maxPrepare);
         PrepareAck ackmessage = new PrepareAck();
         ackmessage.setaccNum(accNum);
         ackmessage.setAccValue(accValue);

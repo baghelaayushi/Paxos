@@ -53,6 +53,7 @@ public class Proposer {
     }
 
     private void sendMessages(int stage){
+        String proposalNumber = getProposalNumber();
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
@@ -65,7 +66,6 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-                    String proposalNumber = getProposalNumber();
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         approvalFrom.add(site.getSiteNumber());
@@ -80,10 +80,15 @@ public class Proposer {
 
                 // to send an accept message to acceptors
                 if(stage == 2) {
-                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                    System.out.print("sending accept messages");
-                    mClient.send(composeAccept());
-                    mClient.close();
+                    if(client.getValue().getSiteNumber() == site.getSiteNumber()){
+                        System.out.println("TODO:ACK-ING self");
+//                        approvalFrom.add(site.getSiteNumber());
+                    }else {
+                        MessagingClient mClient = new MessagingClient(destinationAddress, port);
+                        System.out.print("sending accept messages");
+                        mClient.send(composeAccept());
+                        mClient.close();
+                    }
                 }
             }
             catch (IOException e){
@@ -144,6 +149,8 @@ public class Proposer {
             }
         }
     }
+
+
 
 
 
