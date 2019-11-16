@@ -53,8 +53,7 @@ public class Proposer {
     private void sendMessages(int stage){
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
-            if(client.getValue().getSiteNumber() == site.getSiteNumber())
-                continue;
+
 
             try {
                 String destinationAddress = client.getValue().getIpAddress();
@@ -67,7 +66,14 @@ public class Proposer {
                 if(stage == 1){
                     String proposalNumber = getProposalNumber();
 
-                    mClient.send(composeProposal(proposalNumber));
+                    if(client.getValue().getSiteNumber() == site.getSiteNumber()){
+                        approvalFrom.add(site.getSiteNumber());
+
+                    }else {
+                        mClient.send(composeProposal(proposalNumber));
+
+                    }
+
 
                 }
 
