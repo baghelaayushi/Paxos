@@ -60,7 +60,6 @@ public class Proposer {
                 int port = client.getValue().getRandomPort();
                 Acceptor acceptorInstance  = Acceptor.getInstance();
                 Message m;
-                MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
                 //to send a propose message to acceptor
                 if(stage == 1){
@@ -68,10 +67,10 @@ public class Proposer {
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         approvalFrom.add(site.getSiteNumber());
-
                     }else {
+                        MessagingClient mClient = new MessagingClient(destinationAddress, port);
                         mClient.send(composeProposal(proposalNumber));
-
+                        mClient.close();
                     }
 
 
@@ -79,10 +78,11 @@ public class Proposer {
 
                 // to send an accept message to acceptors
                 if(stage == 2) {
+                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
                     System.out.print("sending accept messages");
                     mClient.send(composeAccept());
+                    mClient.close();
                 }
-                mClient.close();
             }
             catch (IOException e){
                 e.printStackTrace();
@@ -126,11 +126,13 @@ public class Proposer {
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
+
         if(!wasSupported){
             //TODO:Proposal was denied
         }else{
             //TODO: Add to the set
             approvalFrom.add(ack.getFrom());
+            System.out.println(approvalFrom.size() + " "+ siteHashMap.size()/2 + " " + acceptSent);
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
                 //TODO:Proposal is approved, begin processing accept
 
