@@ -13,9 +13,9 @@ mkdir bin
 # -d is used to specify the destination directory for the .class files
 # bin must be in the classpath because I'm compiling from outside of bin
 #I need to set -cp to be bin/ because I'm building from outside of bin.
-javac -source 1.8 -target 1.8    -sourcepath src -d bin -cp bin/ src/main/java/**/**.java -cp bin/ src/main/java/**.java -cp src/dependencies/gson-2.8.6.jar:src/dependencies/commons-lang3-3.5.jar
+javac -source 1.8 -target 1.8    -sourcepath src -d bin -cp bin/ main/java/**/**.java  -cp bin/ main/java/**/**/**.java -cp bin/ main/java/**.java -cp "dependencies/gson-2.8.6.jar"
 
-cp -R src/dependencies/ bin/dependencies
+cp -R dependencies/ bin/dependencies
 # copy the run.sh script from the root of the project into the bin directory
 cp run.sh bin/
 cp knownhosts.json bin/

@@ -15,20 +15,25 @@ public class Acceptor {
     static String accNum;
     static String accValue;
     HashMap<String, Site> siteHashMap = null;
+    HashMap<Integer,String> siteIDMap = null;
     Site site = null;
 
-    public Acceptor(Site siteInformation, HashMap<String, Site> siteMap){
+    public Acceptor(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
         this.site = siteInformation;
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
+        this.siteIDMap = siteIDMap;
         accNum = null;
         accValue = null;
     }
 
-    public static Acceptor getInstance(Site siteInformation, HashMap<String, Site> siteMap){
+    public static Acceptor getInstance(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
         if (instance == null){
-            instance = new Acceptor(siteInformation, siteMap);
+            instance = new Acceptor(siteInformation, siteMap,siteIDMap);
         }
+        return instance;
+    }
+    public static Acceptor getInstance(){
         return instance;
     }
 
@@ -44,7 +49,7 @@ public class Acceptor {
         LearnMessage learnmessage = new LearnMessage();
         learnmessage.setAccNum(accNum);
         learnmessage.setAccValue(accValue);
-        learnmessage.setMessageType('4');
+        learnmessage.setMessageType(4);
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
@@ -69,8 +74,9 @@ public class Acceptor {
 
     private void sendAckMessages(int sender, PrepareAck ack){
             try {
-                String destinationAddress = siteHashMap.get(sender).getIpAddress();
-                int port = siteHashMap.get(sender).getRandomPort();
+                System.out.println("sending ack" + ack.getMessageType());
+                String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
+                int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
 
@@ -85,6 +91,7 @@ public class Acceptor {
 
     public void processPrepareRequest(PrepareMessage message) {
         int sender = message.getFrom();
+        System.out.println("message from sender:" + sender);
         String proposalNumber[] = message.getProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[2];
         PrepareAck ackmessage = new PrepareAck();
@@ -97,13 +104,14 @@ public class Acceptor {
         else
             ackmessage.setAck(true);
 
-        ackmessage.setMessageType('3');
+        ackmessage.setMessageType(3);
         sendAckMessages(sender,ackmessage);
         maxPrepare = Integer.parseInt(proposed);
 
     }
 
     public void processAcceptRequest(AcceptMessage message) {
+
         int sender = message.getFrom();
         int proposalNumber = message.getProposalNumber();
         PrepareAck ackmessage = new PrepareAck();

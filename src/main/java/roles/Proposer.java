@@ -5,6 +5,7 @@ import messaging.helpers.Message;
 import messaging.helpers.PrepareMessage;
 import helpers.Site;
 import messaging.MessagingClient;
+import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,24 +53,29 @@ public class Proposer {
     private void sendMessages(int stage){
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
-
             if(client.getValue().getSiteNumber() == site.getSiteNumber())
                 continue;
 
             try {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
+                Acceptor acceptorInstance  = Acceptor.getInstance();
+                Message m;
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
                 //to send a propose message to acceptor
                 if(stage == 1){
                     String proposalNumber = getProposalNumber();
+
                     mClient.send(composeProposal(proposalNumber));
+
                 }
 
                 // to send an accept message to acceptors
-                if(stage == 2)
+                if(stage == 2) {
+                    System.out.print("sending accept messages");
                     mClient.send(composeAccept());
+                }
                 mClient.close();
             }
             catch (IOException e){

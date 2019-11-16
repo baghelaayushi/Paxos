@@ -1,6 +1,8 @@
 package messaging;
 
+import messaging.helpers.AcceptMessage;
 import messaging.helpers.Message;
+import messaging.helpers.PrepareMessage;
 import roles.Acceptor;
 import roles.Proposer;
 
@@ -37,6 +39,7 @@ public class MessagingServer {
             ObjectInputStream is = new ObjectInputStream(in);
             try {
                 Message message = (Message) is.readObject();
+                Acceptor instance = Acceptor.getInstance();
 
 
                 System.out.println(message.getMessageType());
@@ -44,15 +47,17 @@ public class MessagingServer {
                 switch (message.getMessageType()){
                     case 1:
                         System.out.println("Received a prepare message");
+                        instance.processPrepareRequest((PrepareMessage) message);
                         //TODO:Go to acceptor
                         break;
                     case 2:
                         System.out.println("Received an accept message");
+                        instance.processAcceptRequest((AcceptMessage)message);
                         //TODO: Go to acceptor
                         break;
                     case 3:
                         System.out.println("Received a promise message");
-                        //TODO: Go to proposer
+                        Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 4:
                         System.out.println("Received an nack for proposal");

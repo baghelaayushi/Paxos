@@ -16,6 +16,7 @@ public class Server {
 
     private static int number_of_hosts = -1;
     private static HashMap<String, Site> siteHashMap = new HashMap<>();
+    private static HashMap<Integer,String> siteIDMap = new HashMap<>();
     private static Site mySite = null;
     private static List<String> log = new ArrayList<>();
 
@@ -54,11 +55,13 @@ public class Server {
 
         for (Map.Entry<String, JsonElement> host : hostsObject.entrySet()){
             JsonObject siteInfo = host.getValue().getAsJsonObject();
+            siteIDMap.put(site_number,host.getKey());
             Site site = new Site(siteInfo.get("ip_address").getAsString(),
                     siteInfo.get("udp_start_port").getAsString(),
                     siteInfo.get("udp_end_port").getAsString(),site_number++);
 
             siteHashMap.put(host.getKey(), site);
+
 
             if(host.getKey().equalsIgnoreCase(self)){
                 mySite = site;
@@ -73,7 +76,7 @@ public class Server {
 
         proposer = Proposer.getInstance(mySite,log, siteHashMap);
 
-        acceptor = Acceptor.getInstance(mySite,siteHashMap);
+        acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap);
 
         new Thread(() -> {
             try {
@@ -91,14 +94,16 @@ public class Server {
         Scanner in = new Scanner(System.in);
         while (true){
 
-            String input[] = in.nextLine().split(" ");
+
+            String inp = in.nextLine();
+            String input[] = inp.split(" ");
             String command = input[0];
             String response;
 
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
-                    proposer.initiateProposal(command);
+                    proposer.initiateProposal(inp);
                     break;
                 case "cancel":
                     //TODO: Cancel seats
