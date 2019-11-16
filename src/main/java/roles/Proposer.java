@@ -19,6 +19,7 @@ public class Proposer {
 
     Site site = null;
     int maxProposalNumber = -1;
+    String latestProposalCombination = "";
     List<String> log = null;
     HashMap<String, Site> siteHashMap = null;
     String currentValue = null;
@@ -47,6 +48,7 @@ public class Proposer {
         int logPosition = log.size()-1;
         //Compose the Number
         String proposalNumber = maxProposalNumber +"-"+logPosition+"-"+site.getSiteNumber();
+        latestProposalCombination = proposalNumber;
         return proposalNumber;
     }
 
@@ -105,6 +107,7 @@ public class Proposer {
     private Message composeAccept(){
         AcceptMessage acceptMessage = new AcceptMessage();
         acceptMessage.setMessageType(2);
+        acceptMessage.setCompleteProposalNumber(latestProposalCombination);
         acceptMessage.setProposalNumber(maxProposalNumber);
         acceptMessage.setProposedValue(currentValue);
         return acceptMessage;

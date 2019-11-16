@@ -9,6 +9,16 @@ public class AcceptMessage extends Message {
         this.proposalNumber = proposalNumber;
     }
 
+    public String getCompleteProposalNumber() {
+        return completeProposalNumber;
+    }
+
+    public void setCompleteProposalNumber(String completeProposalNumber) {
+        this.completeProposalNumber = completeProposalNumber;
+    }
+
+    String completeProposalNumber;
+
     int proposalNumber;
 
     public String getProposedValue() {
