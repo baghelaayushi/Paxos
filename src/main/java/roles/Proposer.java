@@ -47,10 +47,10 @@ public class Proposer {
         //get Proposal Value
         maxProposalNumber++;
         //getLocationInLog
-        int logPosition = log.size();
+//        int logPosition = log.size();
         //Compose the Number
-        System.out.println("log position is:" + logPosition);
-        String proposalNumber = maxProposalNumber +"-"+logPosition+"-"+site.getSiteNumber();
+//        System.out.println("log position is:" + logPosition);
+        String proposalNumber = maxProposalNumber +"-"+site.getSiteNumber();
         latestProposalCombination = proposalNumber;
         return proposalNumber;
     }
@@ -78,6 +78,7 @@ public class Proposer {
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
+                        acceptorInstance.processPrepareRequest(composeProposal(proposalNumber));
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
                         mClient.send(composeProposal(proposalNumber));
@@ -91,6 +92,7 @@ public class Proposer {
                 if(stage == 2) {
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         System.out.println("TODO:ACK-ING self");
+                        acceptorInstance.processAcceptRequest(composeAccept());
 //                        approvalFrom.add(site.getSiteNumber());
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -108,19 +110,21 @@ public class Proposer {
     }
 
 
-    private Message composeProposal(String proposalNumber){
+    private PrepareMessage composeProposal(String proposalNumber){
 
         PrepareMessage proposalMessage = new PrepareMessage();
         proposalMessage.setProposalNumber(proposalNumber);
         proposalMessage.setMessageType(1);
+        proposalMessage.setLogPosition(log.size());
         proposalMessage.setFrom(site.getSiteNumber());
         return proposalMessage;
 
     }
 
-    private Message composeAccept(){
+    private AcceptMessage composeAccept(){
         AcceptMessage acceptMessage = new AcceptMessage();
         acceptMessage.setMessageType(2);
+        acceptMessage.setLogPosition(log.size());
         acceptMessage.setCompleteProposalNumber(latestProposalCombination);
         acceptMessage.setProposalNumber(maxProposalNumber);
         acceptMessage.setProposedValue(currentValue);
@@ -149,7 +153,6 @@ public class Proposer {
         }
 
         try {
-            System.out.println("Attempt 1 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
             checkSetAndAttemptSend();
@@ -158,7 +161,6 @@ public class Proposer {
         }
 
         try {
-            System.out.println("Attempt 2 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
             checkSetAndAttemptSend();
@@ -167,7 +169,6 @@ public class Proposer {
         }
 
         try {
-            System.out.println("Attempt 3 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
             checkSetAndAttemptSend();
@@ -187,6 +188,7 @@ public class Proposer {
 
     private void checkSetAndAttemptSend() throws Exception {
         if (approvalFrom.size() <= siteHashMap.size() / 2) {
+            System.out.println("Next attempt");
             approvalFrom = new HashSet<>();
             System.out.println("Sending another round of messages");
             sendMessages(1);

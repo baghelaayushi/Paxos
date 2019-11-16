@@ -51,7 +51,7 @@ public class Acceptor {
         learnmessage.setAccNum(accNum);
         learnmessage.setAccValue(accValue);
         learnmessage.setMessageType(8);
-        learnmessage.setFrom(sender);
+        learnmessage.setFrom(site.getSiteNumber());
         learnmessage.setLogPosition(logPosition);
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
@@ -95,11 +95,12 @@ public class Acceptor {
     }
 
     public void processPrepareRequest(PrepareMessage message) {
+        Proposer proposer = Proposer.getInstance(null,null,null);
         int sender = message.getFrom();
         System.out.println("message from sender:" + sender);
         String proposalNumber[] = message.getProposalNumber().split("-");
-        String proposed = proposalNumber[0] + proposalNumber[2];
-        System.out.println("Recieved proposal with " +proposalNumber + "Max prepare is "+ maxPrepare);
+        String proposed = proposalNumber[0] + proposalNumber[1];
+//        System.out.println("Recieved proposal with " +proposalNumber + "Max prepare is "+ maxPrepare);
         PrepareAck ackmessage = new PrepareAck();
         ackmessage.setaccNum(accNum);
         ackmessage.setAccValue(accValue);
@@ -112,18 +113,24 @@ public class Acceptor {
             ackmessage.setAck(true);
 
         ackmessage.setMessageType(3);
-        sendAckMessages(sender,ackmessage);
+        if(sender == site.getSiteNumber()){
+            //TODO for nack
+            proposer.processProposalAcks(ackmessage,true);
+        }
+        else {
+            sendAckMessages(sender, ackmessage);
+        }
         maxPrepare = Integer.parseInt(proposed);
 
     }
 
     public void processAcceptRequest(AcceptMessage message) {
-
+        Proposer proposer = Proposer.getInstance(null,null,null);
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
-        String proposed = proposalNumber[0] + proposalNumber[2];
-        System.out.println("Log position is:" + proposalNumber[1]);
-        int logPosition = Integer.parseInt(proposalNumber[1]);
+        String proposed = proposalNumber[0] + proposalNumber[1];
+//        System.out.println("Log position is:" + proposalNumber[1]);
+//        int logPosition = Integer.parseInt(proposalNumber[1]);
         PrepareAck ackmessage = new PrepareAck();
         System.out.println(proposalNumber +"  "+ maxPrepare);
         if (Integer.parseInt(proposed) < maxPrepare) {
@@ -137,22 +144,30 @@ public class Acceptor {
 
         if (Integer.parseInt(proposed) == maxPrepare) {
             try {
-                accNum = String.valueOf(proposalNumber);
-                accValue = String.valueOf(message.getProposedValue());
+                System.out.println("ACC NUM IS "+ message.getCompleteProposalNumber());
+                System.out.println("ACC VAL IS "+ message.getProposedValue());
+                accNum = message.getCompleteProposalNumber();
+                accValue = "Reserve UserA 1,2";
                 maxPrepare = Integer.parseInt(proposed);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
                 //sending acceptance message to proposer
-                sendAckMessages(sender, ackmessage);
+                if(sender == site.getSiteNumber()){
+                    //TODO for nack
+                    System.out.println("I was the sender");
+                }
+                else {
+                    sendAckMessages(sender, ackmessage);
+                }
             }
             catch (Exception e){
                 System.out.println(e);
             }
 
             //sending acceptance to learners
-            sendMessages(sender,logPosition);
+            sendMessages(sender,message.getLogPosition());
         }
 
     }
