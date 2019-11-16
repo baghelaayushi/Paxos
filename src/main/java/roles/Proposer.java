@@ -1,5 +1,6 @@
 package roles;
 
+import javafx.concurrent.Task;
 import messaging.helpers.AcceptMessage;
 import messaging.helpers.Message;
 import messaging.helpers.PrepareMessage;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 public class Proposer {
 
@@ -53,7 +55,7 @@ public class Proposer {
     }
 
     private void sendMessages(int stage){
-        String proposalNumber;
+        String proposalNumber = null;
         if(stage == 1)
             proposalNumber = getProposalNumber();
 
@@ -68,8 +70,10 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
+                    System.out.println("Sending messages" + proposalNumber);
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
+                        System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -125,25 +129,78 @@ public class Proposer {
         String input[] = reservation.split(" ");
         String clientName = input[1];
         String flightNumbers[] = input[2].split(",");
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
+        Future<String> future = executor.submit(new Tasks());
+
+        approvalFrom = new HashSet<>();
         sendMessages(1);
+
+        try{
+            System.out.println("Waiting");
+            future.get(3, TimeUnit.SECONDS);
+            System.out.println("Finished");
+        }catch (Exception e){
+
+            future.cancel(true);
+        }
+
+        try {
+            System.out.println("Attempt 1 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
+            future = executor.submit(new Tasks());
+            future.get(3, TimeUnit.SECONDS);
+            checkSetAndAttemptSend();
+        }catch (Exception e1){
+           future.cancel(true);
+        }
+
+        try {
+            System.out.println("Attempt 2 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
+            future = executor.submit(new Tasks());
+            future.get(3, TimeUnit.SECONDS);
+            checkSetAndAttemptSend();
+        }catch (Exception e1){
+            future.cancel(true);
+        }
+
+        try {
+            System.out.println("Attempt 3 " + approvalFrom.size() + " " + siteHashMap.size() / 2);
+            future = executor.submit(new Tasks());
+            future.get(3, TimeUnit.SECONDS);
+            checkSetAndAttemptSend();
+        }catch (Exception e1){
+            future.cancel(true);
+        }
+
+
 
         currentValue = reservation;
         //TODO : Figure out how multiple requests will be handled here
 
+        executor.shutdownNow();
+
 
     }
 
+    private void checkSetAndAttemptSend() throws Exception {
+        if (approvalFrom.size() <= siteHashMap.size() / 2) {
+            approvalFrom = new HashSet<>();
+            System.out.println("Sending another round of messages");
+            sendMessages(1);
+        } else {
+            throw new Exception();
+        }
+    }
+
     public void processProposalAcks(Message ack, boolean wasSupported){
-        System.out.println(approvalFrom.size() + " "+ siteHashMap.size()/2 + " " + acceptSent);
 
         if(!wasSupported){
             //TODO:Proposal was denied
+
         }else{
             //TODO: Add to the set
             approvalFrom.add(ack.getFrom());
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
-                //TODO:Proposal is approved, begin processing accept
 
                 sendMessages(2);
                 acceptSent = true;
@@ -152,11 +209,12 @@ public class Proposer {
         }
     }
 
+}
 
-
-
-
-
-
-
+class Tasks implements Callable<String> {
+    @Override
+    public String call() throws Exception {
+        Thread.sleep(3000); // Just to demo a long running task of 4 seconds.
+        return "Ready!";
+    }
 }
