@@ -53,7 +53,9 @@ public class Proposer {
     }
 
     private void sendMessages(int stage){
-        String proposalNumber = getProposalNumber();
+        String proposalNumber;
+        if(stage == 1)
+            proposalNumber = getProposalNumber();
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
