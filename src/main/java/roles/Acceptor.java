@@ -45,25 +45,30 @@ public class Acceptor {
         return accNum+"-"+accValue;
     }
 
-    private void sendMessages(){
+    private void sendMessages(int sender, int logPosition){
+        Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
         learnmessage.setAccNum(accNum);
         learnmessage.setAccValue(accValue);
-        learnmessage.setMessageType(4);
+        learnmessage.setMessageType(8);
+        learnmessage.setFrom(sender);
+        learnmessage.setLogPosition(logPosition);
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
-            if(client.getValue().getSiteNumber() == site.getSiteNumber())
-                continue;
 
             try {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
-                MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
-
-                mClient.send(learnmessage);
-                mClient.close();
+                if(client.getValue().getSiteNumber() == site.getSiteNumber()){
+                    instance.Listen(learnmessage);
+                }
+                else {
+                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
+                    mClient.send(learnmessage);
+                    mClient.close();
+                }
             }
             catch (IOException e){
                 e.printStackTrace();
@@ -117,6 +122,8 @@ public class Acceptor {
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[2];
+        System.out.println("Log position is:" + proposalNumber[1]);
+        int logPosition = Integer.parseInt(proposalNumber[1]);
         PrepareAck ackmessage = new PrepareAck();
         System.out.println(proposalNumber +"  "+ maxPrepare);
         if (Integer.parseInt(proposed) < maxPrepare) {
@@ -145,7 +152,7 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-            //sendMessages();
+            sendMessages(sender,logPosition);
         }
 
     }

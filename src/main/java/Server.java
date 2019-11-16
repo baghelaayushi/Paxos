@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import helpers.Site;
 import messaging.MessagingServer;
 import roles.Acceptor;
+import roles.Learner;
 import roles.Proposer;
 
 import java.io.BufferedReader;
@@ -22,6 +23,7 @@ public class Server {
 
     private static Proposer proposer = null;
     private static Acceptor acceptor = null;
+    private static Learner learner = null;
 
     public static void main(String[] args) {
 
@@ -77,6 +79,9 @@ public class Server {
         proposer = Proposer.getInstance(mySite,log, siteHashMap);
 
         acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap);
+
+        learner = Learner.getInstance(mySite,siteHashMap,siteIDMap);
+
 
         new Thread(() -> {
             try {

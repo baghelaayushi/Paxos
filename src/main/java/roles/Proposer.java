@@ -45,15 +45,16 @@ public class Proposer {
         //get Proposal Value
         maxProposalNumber++;
         //getLocationInLog
-        int logPosition = log.size()-1;
+        int logPosition = log.size();
         //Compose the Number
+        System.out.println("log position is:" + logPosition);
         String proposalNumber = maxProposalNumber +"-"+logPosition+"-"+site.getSiteNumber();
         latestProposalCombination = proposalNumber;
         return proposalNumber;
     }
 
     private void sendMessages(int stage){
-        String proposalNumber;
+        String proposalNumber="";
         if(stage == 1)
             proposalNumber = getProposalNumber();
 

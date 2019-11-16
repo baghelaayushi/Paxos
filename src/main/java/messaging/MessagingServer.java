@@ -1,9 +1,11 @@
 package messaging;
 
 import messaging.helpers.AcceptMessage;
+import messaging.helpers.LearnMessage;
 import messaging.helpers.Message;
 import messaging.helpers.PrepareMessage;
 import roles.Acceptor;
+import roles.Learner;
 import roles.Proposer;
 
 import java.io.ByteArrayInputStream;
@@ -40,6 +42,7 @@ public class MessagingServer {
             try {
                 Message message = (Message) is.readObject();
                 Acceptor instance = Acceptor.getInstance();
+                Learner learner = Learner.getInstance();
 
 
                 System.out.println(message.getMessageType());
@@ -77,7 +80,8 @@ public class MessagingServer {
                         //TODO: Send to proposer
                         break;
                     case 8:
-                        System.out.println("A new value was learned, commit it");
+                        System.out.println("recieved a learn message, will check if can commit it hahahaha");
+                        learner.Listen((LearnMessage) message);
                         //TODO: Send to learner and maybe proposer
                 }
 
