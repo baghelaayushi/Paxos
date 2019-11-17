@@ -2,16 +2,16 @@ package roles;
 
 import helpers.Site;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+
 import messaging.helpers.*;
 import helpers.Site;
+import helpers.Event;
 import messaging.MessagingClient;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Learner {
     static Learner learner = null;
@@ -20,6 +20,7 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
+    List<Event> log = new ArrayList<>();
     Site site = null;
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -44,7 +45,7 @@ public class Learner {
     public void Listen(LearnMessage message){
         int sender = message.getFrom();
         String accNum = message.getAccNum();
-        String accVal = message.getAccValue();
+        Event accVal = message.getAccValue();
         int logPosition = message.getLogPosition();
         int maxSites = siteHashMap.size()/2+1;
 
@@ -59,7 +60,8 @@ public class Learner {
                 System.out.println(count);
                 if(count+1>=maxSites){
                     System.out.println("commiting");
-                    return;
+                    log.add(logPosition,accVal);
+                    System.out.println(log.get(logPosition));
                 }
                 HashMap<String,Integer> temp = logMap.get(logPosition);
                 temp.replace(accNum + '-' + accVal,count+1);

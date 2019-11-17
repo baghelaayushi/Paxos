@@ -1,9 +1,11 @@
 package messaging.helpers;
 
+import helpers.Event;
+
 public class PrepareAck extends Message {
     boolean Ack;
     String accNum;
-    String accValue;
+    Event accValue;
 
     public void setAck(boolean Ack){
         this.Ack = Ack;
@@ -11,7 +13,7 @@ public class PrepareAck extends Message {
     public void setaccNum(String accNum){
         this.accNum = accNum;
     }
-    public void setAccValue(String accValue){
+    public void setAccValue(Event accValue){
         this.accValue = accValue;
     }
 }

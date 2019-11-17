@@ -1,5 +1,7 @@
 package messaging.helpers;
 
+import helpers.Event;
+
 public class AcceptMessage extends Message {
     public int getProposalNumber() {
         return proposalNumber;
@@ -21,14 +23,14 @@ public class AcceptMessage extends Message {
 
     int proposalNumber;
 
-    public String getProposedValue() {
+    public Event getProposedValue() {
         return proposedValue;
     }
 
-    public void setProposedValue(String proposedValue) {
+    public void setProposedValue(Event proposedValue) {
         this.proposedValue = proposedValue;
     }
 
-    String proposedValue;
+    Event proposedValue;
 
 }

@@ -2,6 +2,7 @@ package roles;
 
 import messaging.helpers.*;
 import helpers.Site;
+import helpers.Event;
 import messaging.MessagingClient;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ public class Acceptor {
     static Acceptor instance = null;
     int maxPrepare = -1;
     static String accNum;
-    static String accValue;
+    static Event accValue;
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     Site site = null;
@@ -147,7 +148,7 @@ public class Acceptor {
                 System.out.println("ACC NUM IS "+ message.getCompleteProposalNumber());
                 System.out.println("ACC VAL IS "+ message.getProposedValue());
                 accNum = message.getCompleteProposalNumber();
-                accValue = "Reserve UserA 1,2";
+                accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
