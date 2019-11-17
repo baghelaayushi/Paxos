@@ -17,7 +17,7 @@ public class Learner {
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
     static List<String> log = new ArrayList<String>();
-    static List<>
+    List<Boolean> logCheck = new ArrayList<>();
     Site site = null;
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -55,10 +55,11 @@ public class Learner {
             if(logMap.get(logPosition).containsKey(accNum + '-' + accVal)){
                 int count = logMap.get(logPosition).get(accNum + '-' + accVal);
                 System.out.println(count);
-                if(count+1>=maxSites){
+                if(count+1>=maxSites && !logCheck.get(logPosition)){
                     System.out.println("commiting");
                     log.add(logPosition,accVal);
                     System.out.println(log.get(logPosition));
+                    logCheck.add(logPosition,true);
                 }
                 HashMap<String,Integer> temp = logMap.get(logPosition);
                 temp.replace(accNum + '-' + accVal,count+1);

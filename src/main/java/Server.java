@@ -120,7 +120,7 @@ public class Server {
                     //TODO: view
                     break;
                 case "log":
-                    //TODO: log
+                    Learner.viewLog();
                     break;
                 case "exit":
                     System.exit(0);
