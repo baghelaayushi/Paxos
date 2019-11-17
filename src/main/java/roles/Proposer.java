@@ -44,12 +44,7 @@ public class Proposer {
 
     private String getProposalNumber(){
 
-        //get Proposal Value
         maxProposalNumber++;
-        //getLocationInLog
-//        int logPosition = log.size();
-        //Compose the Number
-//        System.out.println("log position is:" + logPosition);
         String proposalNumber = maxProposalNumber +"-"+site.getSiteNumber();
         latestProposalCombination = proposalNumber;
         return proposalNumber;
@@ -134,10 +129,8 @@ public class Proposer {
     public void initiateProposal(String reservation){
 
         String input[] = reservation.split(" ");
-        String clientName = input[1];
-        String flightNumbers[] = input[2].split(",");
         ExecutorService executor = Executors.newSingleThreadExecutor();
-
+        currentValue = reservation;
         Future<String> future = executor.submit(new Tasks());
 
         approvalFrom = new HashSet<>();
