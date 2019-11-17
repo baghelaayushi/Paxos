@@ -72,6 +72,8 @@ public class Server {
 
     }
 
+
+
     private static void initialize() throws Exception{
 
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
