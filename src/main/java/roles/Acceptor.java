@@ -145,7 +145,7 @@ public class Acceptor {
                 System.out.println("ACC NUM IS "+ message.getCompleteProposalNumber());
                 System.out.println("ACC VAL IS "+ message.getProposedValue());
                 accNum = message.getCompleteProposalNumber();
-                accValue = message.getProposedValue();
+                accValue = "Reserve A 1,2";
                 maxPrepare = Integer.parseInt(proposed);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);

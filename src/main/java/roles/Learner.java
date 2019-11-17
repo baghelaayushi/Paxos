@@ -16,7 +16,8 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
-    List<String> log = new ArrayList<String>();
+    static List<String> log = new ArrayList<String>();
+    static List<>
     Site site = null;
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -74,6 +75,10 @@ public class Learner {
             System.out.println("Inserted into HM " + logPosition + " " + temp.get(accNum+"-"+accVal));
         }
 
+    }
+    public static void viewLog(){
+        for(String s:log)
+            System.out.println(s);
     }
 
 }
