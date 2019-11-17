@@ -5,11 +5,7 @@ import helpers.Site;
 import java.util.*;
 
 import messaging.helpers.*;
-import helpers.Site;
-import helpers.Event;
-import messaging.MessagingClient;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,7 +16,7 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
-    List<Event> log = new ArrayList<>();
+    List<String> log = new ArrayList<String>();
     Site site = null;
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -45,7 +41,7 @@ public class Learner {
     public void Listen(LearnMessage message){
         int sender = message.getFrom();
         String accNum = message.getAccNum();
-        Event accVal = message.getAccValue();
+        String accVal = message.getAccValue();
         int logPosition = message.getLogPosition();
         int maxSites = siteHashMap.size()/2+1;
 

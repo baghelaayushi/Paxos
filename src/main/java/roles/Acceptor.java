@@ -2,19 +2,17 @@ package roles;
 
 import messaging.helpers.*;
 import helpers.Site;
-import helpers.Event;
 import messaging.MessagingClient;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Acceptor {
     static Acceptor instance = null;
     int maxPrepare = -1;
     static String accNum;
-    static Event accValue;
+    static String accValue;
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     Site site = null;
@@ -130,8 +128,7 @@ public class Acceptor {
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
-//        System.out.println("Log position is:" + proposalNumber[1]);
-//        int logPosition = Integer.parseInt(proposalNumber[1]);
+
         PrepareAck ackmessage = new PrepareAck();
         System.out.println(proposalNumber +"  "+ maxPrepare);
         if (Integer.parseInt(proposed) < maxPrepare) {
