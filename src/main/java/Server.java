@@ -76,11 +76,12 @@ public class Server {
 
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
-        proposer = Proposer.getInstance(mySite,log, siteHashMap);
 
-        acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap);
+        new Thread(()-> proposer = Proposer.getInstance(mySite,log, siteHashMap)).start();
+        new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();;
+        new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();;
 
-        learner = Learner.getInstance(mySite,siteHashMap,siteIDMap);
+
 
 
         new Thread(() -> {
