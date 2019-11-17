@@ -45,42 +45,42 @@ public class MessagingServer {
                 Learner learner = Learner.getInstance();
 
 
-                System.out.println(message.getMessageType());
+//                System.out.println(message.getMessageType());
 
                 switch (message.getMessageType()){
                     case 1:
-                        System.out.println("Received a prepare message");
+//                        System.out.println("Received a prepare message");
                         instance.processPrepareRequest((PrepareMessage) message);
                         //TODO:Go to acceptor
                         break;
                     case 2:
-                        System.out.println("Received an accept message");
+//                        System.out.println("Received an accept message");
                         instance.processAcceptRequest((AcceptMessage)message);
                         //TODO: Go to acceptor
                         break;
                     case 3:
-                        System.out.println("Received a promise message");
+//                        System.out.println("Received a promise message");
                         Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 4:
-                        System.out.println("Received an nack for proposal");
+//                        System.out.println("Received an nack for proposal");
                         Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
                         break;
                     case 5:
-                        System.out.println("Received a nack for log position");
+//                        System.out.println("Received a nack for log position");
                         //TODO: Go to proposer
                         break;
                     case 6:
-                        System.out.println("Recieved an ack for proposal");
+//                        System.out.println("Recieved an ack for proposal");
                         Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 7:
-                        System.out.println("Recieved nack for accept message");
+//                        System.out.println("Recieved nack for accept message");
                         //TODO: Send to proposer
                         break;
                     case 8:
-                        System.out.println("recieved a learn message, will check if can commit it hahahaha");
+//                        System.out.println("recieved a learn message, will check if can commit it hahahaha");
                         learner.Listen((LearnMessage) message);
                         //TODO: Send to learner and maybe proposer
                 }

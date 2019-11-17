@@ -68,10 +68,10 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-                    System.out.println("Sending messages" + proposalNumber);
+//                    System.out.println("Sending messages" + proposalNumber);
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-                        System.out.println("Adding self to acceptor");
+//                        System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
                         acceptorInstance.processPrepareRequest(composeProposal(proposalNumber));
                     }else {
@@ -86,12 +86,9 @@ public class Proposer {
                 // to send an accept message to acceptors
                 if(stage == 2) {
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-                        System.out.println("TODO:ACK-ING self");
                         acceptorInstance.processAcceptRequest(composeAccept());
-//                        approvalFrom.add(site.getSiteNumber());
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                        System.out.print("sending accept messages");
                         mClient.send(composeAccept());
                         mClient.close();
                     }
@@ -137,9 +134,7 @@ public class Proposer {
         sendMessages(1);
 
         try{
-            System.out.println("Waiting");
             future.get(3, TimeUnit.SECONDS);
-            System.out.println("Finished");
         }catch (Exception e){
 
             future.cancel(true);
@@ -172,7 +167,6 @@ public class Proposer {
 
 
         currentValue = reservation;
-        //TODO : Figure out how multiple requests will be handled here
 
         executor.shutdownNow();
 
@@ -181,9 +175,7 @@ public class Proposer {
 
     private void checkSetAndAttemptSend() throws Exception {
         if (approvalFrom.size() <= siteHashMap.size() / 2) {
-            System.out.println("Next attempt");
             approvalFrom = new HashSet<>();
-            System.out.println("Sending another round of messages");
             sendMessages(1);
         } else {
             throw new Exception();
@@ -192,6 +184,7 @@ public class Proposer {
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
+        System.out.println("Received ack from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied
 
