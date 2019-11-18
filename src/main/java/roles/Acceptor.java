@@ -44,7 +44,7 @@ public class Acceptor {
         return accNum+"-"+accValue;
     }
 
-    private void sendMessages(int sender, int logPosition){
+    private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
         learnmessage.setAccNum(accNum);
@@ -61,7 +61,7 @@ public class Acceptor {
                 int port = client.getValue().getRandomPort();
 
                 if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-                    instance.Listen(learnmessage);
+                    instance.learner(learnmessage);
                 }
                 else {
                     MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -98,10 +98,19 @@ public class Acceptor {
         String proposalNumber[] = message.getProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
 
+
+        int myLogPosition = Learner.getInstance(null,null,null).log.size();
+
+
+        System.out.println("Accepting for Log Position" + message.getLogPosition() + " I have" + myLogPosition);
+
+
         PrepareAck ackmessage = new PrepareAck();
         ackmessage.setaccNum(accNum);
         ackmessage.setAccValue(accValue);
         ackmessage.setFrom(site.getSiteNumber());
+        ackmessage.setLogPosition(myLogPosition);
+
 
         if (Integer.parseInt(proposed) < maxPrepare) {
             ackmessage.setAck(false);
@@ -110,8 +119,8 @@ public class Acceptor {
             ackmessage.setAck(true);
 
         ackmessage.setMessageType(3);
+
         if(sender == site.getSiteNumber()){
-            //TODO for nack
             proposer.processProposalAcks(ackmessage,true);
         }
         else {
@@ -122,7 +131,7 @@ public class Acceptor {
     }
 
     public void processAcceptRequest(AcceptMessage message) {
-        Proposer proposer = Proposer.getInstance(null,null,null);
+
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
@@ -133,6 +142,7 @@ public class Acceptor {
             ackmessage.setaccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
+
             sendAckMessages(sender,ackmessage);
 
         }
@@ -140,7 +150,7 @@ public class Acceptor {
         if (Integer.parseInt(proposed) == maxPrepare) {
             try {
                 accNum = message.getCompleteProposalNumber();
-                accValue = "Reserve A 1,2";
+                accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
@@ -158,7 +168,8 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-            sendMessages(sender,message.getLogPosition());
+            System.out.println("Sending message to learner");
+            sendCommitToLearner(sender,message.getLogPosition());
         }
 
     }

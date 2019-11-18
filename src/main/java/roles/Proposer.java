@@ -22,7 +22,6 @@ public class Proposer {
     Site site = null;
     int maxProposalNumber = -1;
     String latestProposalCombination = "";
-    List<String> log = null;
     HashMap<String, Site> siteHashMap = null;
     String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
@@ -32,7 +31,6 @@ public class Proposer {
 
         //TODO:System could have crashed, check that.
         this.site = siteInformation;
-        this.log = log;
         this.siteHashMap = siteMap;
     }
     public static Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
@@ -107,7 +105,7 @@ public class Proposer {
         PrepareMessage proposalMessage = new PrepareMessage();
         proposalMessage.setProposalNumber(proposalNumber);
         proposalMessage.setMessageType(1);
-        proposalMessage.setLogPosition(log.size());
+        proposalMessage.setLogPosition(Learner.log.size());
         proposalMessage.setFrom(site.getSiteNumber());
         return proposalMessage;
 
@@ -116,12 +114,14 @@ public class Proposer {
     private AcceptMessage composeAccept(){
         AcceptMessage acceptMessage = new AcceptMessage();
         acceptMessage.setMessageType(2);
-        acceptMessage.setLogPosition(log.size());
+        acceptMessage.setLogPosition(Learner.log.size());
         acceptMessage.setCompleteProposalNumber(latestProposalCombination);
         acceptMessage.setProposalNumber(maxProposalNumber);
         acceptMessage.setProposedValue(currentValue);
+        acceptMessage.setFrom(site.getSiteNumber());
         return acceptMessage;
     }
+
 
     public void initiateProposal(String reservation){
 
@@ -131,6 +131,8 @@ public class Proposer {
         Future<String> future = executor.submit(new Tasks());
 
         approvalFrom = new HashSet<>();
+
+        System.out.println("Proposing for Log Position" + Learner.log.size());
         sendMessages(1);
 
         try{
@@ -193,7 +195,9 @@ public class Proposer {
             approvalFrom.add(ack.getFrom());
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
-                sendMessages(2);
+                if(ack.getFrom() != site.getSiteNumber())
+                    sendMessages(2);
+
                 acceptSent = true;
 
             }
