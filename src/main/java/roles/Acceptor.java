@@ -92,6 +92,22 @@ public class Acceptor {
 
     }
 
+    private void sendReconcileMessage(int sender, ReconcileMessage ack){
+        try {
+            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
+            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
+            MessagingClient mClient = new MessagingClient(destinationAddress, port);
+
+
+            mClient.send(ack);
+            mClient.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
     public void processPrepareRequest(PrepareMessage message) {
         Proposer proposer = Proposer.getInstance(null,null,null);
         int sender = message.getFrom();
@@ -105,6 +121,7 @@ public class Acceptor {
         System.out.println("Accepting for Log Position" + message.getLogPosition() + " I have" + myLogPosition);
 
 
+
         PrepareAck ackmessage = new PrepareAck();
         ackmessage.setaccNum(accNum);
         ackmessage.setAccValue(accValue);
@@ -112,21 +129,32 @@ public class Acceptor {
         ackmessage.setLogPosition(myLogPosition);
 
 
-        if (Integer.parseInt(proposed) < maxPrepare) {
-            ackmessage.setAck(false);
-        }
-        else
-            ackmessage.setAck(true);
+        if(message.getLogPosition() < myLogPosition){
+            //TODO: Responding to someone who has wholes in the log
+            System.out.println("There are holes in your log, go fix them");
+            ReconcileMessage reconcileMessage = new ReconcileMessage();
+            reconcileMessage.setFrom(site.getSiteNumber());
+            reconcileMessage.setLog(Learner.getLog());
+            reconcileMessage.setAck(false);
+            reconcileMessage.setMessageType(5);
+            sendReconcileMessage(sender, reconcileMessage);
+        }else {
+            if (Integer.parseInt(proposed) < maxPrepare) {
+                ackmessage.setAck(false);
+            }
+            else
+                ackmessage.setAck(true);
 
-        ackmessage.setMessageType(3);
+            ackmessage.setMessageType(3);
 
-        if(sender == site.getSiteNumber()){
-            proposer.processProposalAcks(ackmessage,true);
+            if(sender == site.getSiteNumber()){
+                proposer.processProposalAcks(ackmessage,true);
+            }
+            else {
+                sendAckMessages(sender, ackmessage);
+            }
+            maxPrepare = Integer.parseInt(proposed);
         }
-        else {
-            sendAckMessages(sender, ackmessage);
-        }
-        maxPrepare = Integer.parseInt(proposed);
 
     }
 

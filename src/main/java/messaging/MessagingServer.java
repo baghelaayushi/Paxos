@@ -68,7 +68,7 @@ public class MessagingServer {
                         //TODO: Go to proposer
                         break;
                     case 5:
-//                        System.out.println("Received a nack for log position");
+                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
                         break;
                     case 7:

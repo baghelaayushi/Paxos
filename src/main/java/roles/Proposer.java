@@ -6,6 +6,7 @@ import messaging.helpers.Message;
 import messaging.helpers.PrepareMessage;
 import helpers.Site;
 import messaging.MessagingClient;
+import messaging.helpers.ReconcileMessage;
 import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
@@ -186,9 +187,25 @@ public class Proposer {
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
-        System.out.println("Received ack from " + ack.getFrom() + " for position " + ack.getLogPosition());
+        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied
+            System.out.println("Fill my log till " + ack.getLogPosition() +" "+ Learner.log.size());
+
+            if(ack.getLogPosition()+1 == Learner.log.size()){
+                return;
+            }
+
+            ReconcileMessage reconcileMessage = (ReconcileMessage) ack;
+
+            for (int i = 0; i <= ack.getLogPosition(); i++){
+
+                Learner.log.add(i, reconcileMessage.log.get(i));
+            }
+
+            System.out.println("Log updated");
+
+            Learner.viewLog();
 
         }else{
             //TODO: Add to the set
