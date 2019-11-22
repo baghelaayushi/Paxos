@@ -5,12 +5,15 @@ import helpers.Site;
 import messaging.MessagingClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Acceptor {
     static Acceptor instance = null;
     int maxPrepare = -1;
+    static HashMap<Integer, List<Integer>>  accEntry = null;
     static String accNum;
     static String accValue;
     HashMap<String, Site> siteHashMap = null;
@@ -22,6 +25,7 @@ public class Acceptor {
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
+        this.siteHashMap = new HashMap<>();
         accNum = null;
         accValue = null;
     }
@@ -115,21 +119,44 @@ public class Acceptor {
         String proposed = proposalNumber[0] + proposalNumber[1];
 
 
-        int myLogPosition = Learner.getInstance(null,null,null).log.size();
-
-
-        System.out.println("Accepting for Log Position" + message.getLogPosition() + " I have" + myLogPosition);
-
-
-
         PrepareAck ackmessage = new PrepareAck();
-        ackmessage.setaccNum(accNum);
-        ackmessage.setAccValue(accValue);
+        //if the log entry is empty for acceptor too
+        //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
+        if(!accEntry.containsKey(message.getLogPosition())) {
+
+            List<Integer> tempVal = new ArrayList<>();
+            tempVal.add(Integer.parseInt(proposed));
+            tempVal.add(-1);
+            tempVal.add(-1);
+            accEntry.put(message.getLogPosition(), tempVal);
+        }
+        int prep = accEntry.get(message.getLogPosition()).get(0);
+        if (Integer.parseInt(proposed) < maxPrepare) {
+            ackmessage.setAck(false);
+        }
+        else
+            ackmessage.setAck(true);
+
+        ackmessage.setaccNum(accEntry.get(message.getLogPosition()).get(1).toString());
+        ackmessage.setAccValue(accEntry.get(message.getLogPosition()).get(2).toString());
         ackmessage.setFrom(site.getSiteNumber());
-        ackmessage.setLogPosition(myLogPosition);
+
+        ackmessage.setMessageType(3);
+
+        if(sender == site.getSiteNumber()){
+            proposer.processProposalAcks(ackmessage,true);
+        }
+        else {
+            sendAckMessages(sender, ackmessage);
+        }
+        maxPrepare = Integer.parseInt(proposed);
 
 
-        if(message.getLogPosition() < myLogPosition){
+
+
+
+
+        /*if(message.getLogPosition() < myLogPosition) {
             //TODO: Responding to someone who has wholes in the log
             System.out.println("There are holes in your log, go fix them");
             ReconcileMessage reconcileMessage = new ReconcileMessage();
@@ -138,23 +165,7 @@ public class Acceptor {
             reconcileMessage.setAck(false);
             reconcileMessage.setMessageType(5);
             sendReconcileMessage(sender, reconcileMessage);
-        }else {
-            if (Integer.parseInt(proposed) < maxPrepare) {
-                ackmessage.setAck(false);
-            }
-            else
-                ackmessage.setAck(true);
-
-            ackmessage.setMessageType(3);
-
-            if(sender == site.getSiteNumber()){
-                proposer.processProposalAcks(ackmessage,true);
-            }
-            else {
-                sendAckMessages(sender, ackmessage);
-            }
-            maxPrepare = Integer.parseInt(proposed);
-        }
+        }*/
 
     }
 

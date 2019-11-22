@@ -189,24 +189,8 @@ public class Proposer {
 
         System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
-            //TODO:Proposal was denied
-            System.out.println("Fill my log till " + ack.getLogPosition() +" "+ Learner.log.size());
-
-            if(ack.getLogPosition()+1 == Learner.log.size()){
-                return;
-            }
-
-            ReconcileMessage reconcileMessage = (ReconcileMessage) ack;
-
-            for (int i = 0; i <= ack.getLogPosition(); i++){
-
-                Learner.log.add(i, reconcileMessage.log.get(i));
-            }
-
-            System.out.println("Log updated");
-
-            Learner.viewLog();
-
+            //TODO:Proposal was denied, need to propose with a bigger proposal num
+           System.out.println("The reservation was rejected");
         }else{
             //TODO: Add to the set
             approvalFrom.add(ack.getFrom());
