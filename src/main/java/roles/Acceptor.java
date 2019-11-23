@@ -1,14 +1,16 @@
 package roles;
 
+import com.google.gson.*;
+import helpers.Event;
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Acceptor {
     static Acceptor instance = null;
@@ -46,6 +48,59 @@ public class Acceptor {
             return null;
 
         return accNum+"-"+accValue;
+    }
+
+    static void saveState(){
+
+        try(FileWriter fw = new FileWriter("current_log.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<Integer,List<Integer>> entry: accEntry.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(entry.getValue());
+                tempArray.add(ob);
+                temp.add(entry.getKey().toString(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    static void getState(){
+        try {
+            //convert the json string back to object
+            BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            accEntry = new HashMap<>();
+            for(JsonElement ob: parsed){
+                JsonObject temp = ob.getAsJsonObject();
+                Set<String> id = temp.keySet();
+                String s = "";
+                for(String myId:id)
+                    s = myId;
+
+                JsonArray array = temp.getAsJsonArray(s);
+                JsonElement obj = array.get(0);
+                List<String> cl = gson.fromJson(obj.getAsString(),List.class);
+                List<Integer> values = new ArrayList<>();
+                values.add(Integer.parseInt(cl.get(0)));
+                values.add(Integer.parseInt(cl.get(1)));
+                values.add(Integer.parseInt(cl.get(2)));
+                accEntry.put(Integer.parseInt(s),values);
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void sendCommitToLearner(int sender, int logPosition){
@@ -129,6 +184,7 @@ public class Acceptor {
             tempVal.add(-1);
             tempVal.add(-1);
             accEntry.put(message.getLogPosition(), tempVal);
+            saveState();
         }
         int prep = accEntry.get(message.getLogPosition()).get(0);
         if (Integer.parseInt(proposed) < maxPrepare) {

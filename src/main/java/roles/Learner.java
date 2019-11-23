@@ -1,7 +1,12 @@
 package roles;
 
+import com.google.gson.*;
 import helpers.Site;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import messaging.helpers.*;
@@ -16,7 +21,7 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
-    static List<String> log = new ArrayList<String>();
+    static String[] log = new String[Integer.MAX_VALUE];
     List<Boolean> logCheck = new ArrayList<>();
     Site site = null;
 
@@ -42,6 +47,42 @@ public class Learner {
         return learner;
     }
 
+    static void saveState(){
+
+        try(FileWriter fw = new FileWriter("saved_log.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(String s:log){
+                arr.add(s);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    static void getState(){
+        try {
+            //convert the json string back to object
+            BufferedReader backup = new BufferedReader(new FileReader("saved_log.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            log = new String[Integer.MAX_VALUE];
+            int  i =0;
+            for(JsonElement ob: parsed){
+                String s = ob.getAsString();
+                log[i] = s;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void learner(LearnMessage message){
 
         String accNum = message.getAccNum();
@@ -63,7 +104,8 @@ public class Learner {
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
                     System.out.println("commiting at position" + requestedLogPosition);
-                    log.add(requestedLogPosition,accVal);
+                    log[requestedLogPosition] = accVal;
+                    saveState();
                     logCheck.add(requestedLogPosition,true);
                 }
 
@@ -89,7 +131,7 @@ public class Learner {
             System.out.println(s);
     }
 
-    public static  List<String> getLog(){
+    public static  String[] getLog(){
         return log;
     }
 

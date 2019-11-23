@@ -106,7 +106,7 @@ public class Proposer {
         PrepareMessage proposalMessage = new PrepareMessage();
         proposalMessage.setProposalNumber(proposalNumber);
         proposalMessage.setMessageType(1);
-        proposalMessage.setLogPosition(Learner.log.size());
+        proposalMessage.setLogPosition(Learner.log.length);
         proposalMessage.setFrom(site.getSiteNumber());
         return proposalMessage;
 
@@ -115,7 +115,7 @@ public class Proposer {
     private AcceptMessage composeAccept(){
         AcceptMessage acceptMessage = new AcceptMessage();
         acceptMessage.setMessageType(2);
-        acceptMessage.setLogPosition(Learner.log.size());
+        acceptMessage.setLogPosition(Learner.log.length);
         acceptMessage.setCompleteProposalNumber(latestProposalCombination);
         acceptMessage.setProposalNumber(maxProposalNumber);
         acceptMessage.setProposedValue(currentValue);
@@ -133,7 +133,7 @@ public class Proposer {
 
         approvalFrom = new HashSet<>();
 
-        System.out.println("Proposing for Log Position" + Learner.log.size());
+        System.out.println("Proposing for Log Position" + Learner.log.length);
         sendMessages(1);
 
         try{
