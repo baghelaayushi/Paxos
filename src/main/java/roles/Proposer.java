@@ -202,10 +202,22 @@ public class Proposer {
 
             String proposed = prepareMessage.getAccNum();
 
-            if(Integer.parseInt(proposed) < maxRecvdAckNum){
-                System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
-                currentValue = prepareMessage.getAccValue();
+            if(prepareMessage.getAccValue() != null){
+
+                if(maxRecvdAckNum != -1){
+                    if(Integer.parseInt(proposed) > maxRecvdAckNum){
+                        maxRecvdAckNum = Integer.parseInt(proposed);
+                        currentValue = prepareMessage.getAccValue();
+                    }
+                }else{
+                    maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
+                    System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
+                    currentValue = prepareMessage.getAccValue();
+                }
+
+
             }
+
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
