@@ -120,10 +120,10 @@ public class Server {
                     proposer.initiateProposal(inp,"cancel");
                     break;
                 case "view":
-                    Learner.viewDictionary();
+                    learner.viewDictionary();
                     break;
                 case "log":
-                    Learner.viewLog();
+                    learner.viewLog();
                     break;
                 case "exit":
                     System.exit(0);

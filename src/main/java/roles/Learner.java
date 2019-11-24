@@ -22,7 +22,7 @@ public class Learner {
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
     String[] log = new String[1000];
-    List<Boolean> logCheck = new ArrayList<>();
+    boolean[] logCheck = new boolean[1000];
     Site site = null;
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
@@ -35,9 +35,6 @@ public class Learner {
         this.logMap = new HashMap<>();
         accNum = null;
         accValue = null;
-        for (int i =0 ; i < 10; i++){
-            logCheck.add(false);
-        }
     }
 
     public static Learner getInstance(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -104,11 +101,11 @@ public class Learner {
 
                 int count = logMap.get(requestedLogPosition).get(accNum + '-' + accVal);
 
-                if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
+                if(count+1>=siteQuorum && !logCheck[requestedLogPosition]){
 
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
                     log[requestedLogPosition] = accVal;
-                    logCheck.add(requestedLogPosition,true);
+                    logCheck[requestedLogPosition] = true;
                     updateDictionary(accVal);
                 }
 
@@ -141,20 +138,15 @@ public class Learner {
 
     }
 
-    public static void viewDictionary(){
+    public void viewDictionary(){
         for (Map.Entry record: reservationMap.entrySet()){
             System.out.println(record.getKey() + " " + record.getValue());
         }
     }
 
-    public static void viewLog(){
-        int i =0;
-        for(String s:learner.log) {
-            if(i == 15){
-                break;
-            }
-            System.out.println(s);
-            i++;
+    public void viewLog(){
+        for(int i =0;i<5;i++){
+            System.out.println(learner.log[i]);
         }
     }
 
