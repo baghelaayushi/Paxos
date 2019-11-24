@@ -1,7 +1,12 @@
 package roles;
 
+import com.google.gson.*;
 import helpers.Site;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import messaging.helpers.*;
@@ -16,7 +21,7 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
-    static List<String> log = new ArrayList<String>();
+    String[] log = new String[1000];
     List<Boolean> logCheck = new ArrayList<>();
     Site site = null;
 
@@ -45,6 +50,42 @@ public class Learner {
         return learner;
     }
 
+    static void saveState(){
+
+        try(FileWriter fw = new FileWriter("saved_log.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(String s:learner.log){
+                arr.add(s);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    static void getState(){
+        try {
+            //convert the json string back to object
+            BufferedReader backup = new BufferedReader(new FileReader("saved_log.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            learner.log = new String[Integer.MAX_VALUE];
+            int i =0;
+            for(JsonElement ob: parsed){
+                String s = ob.getAsString();
+                learner.log[i] = s;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void learner(LearnMessage message){
 
         String accNum = message.getAccNum();
@@ -64,8 +105,9 @@ public class Learner {
                 int count = logMap.get(requestedLogPosition).get(accNum + '-' + accVal);
 
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
+
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
-                    log.add(requestedLogPosition,accVal);
+                    log[requestedLogPosition] = accVal;
                     logCheck.add(requestedLogPosition,true);
                     updateDictionary(accVal);
                 }
@@ -106,12 +148,17 @@ public class Learner {
     }
 
     public static void viewLog(){
-        for(String s:log)
+        int i =0;
+        for(String s:learner.log) {
+            if(i == 15){ break;
+            }
             System.out.println(s);
+            i++;
+        }
     }
 
-    public static  List<String> getLog(){
-        return log;
+    public static  String[] getLog(){
+        return learner.log;
     }
 
 

@@ -46,7 +46,7 @@ public class Proposer {
         return proposalNumber;
     }
 
-    private void sendMessages(int stage){
+    private void sendMessages(int stage,int position){
 
         String proposalNumber = null;
 
@@ -59,6 +59,7 @@ public class Proposer {
             System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
         }
 
+
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
 
@@ -69,7 +70,9 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-                    PrepareMessage message = new PrepareMessage(proposalNumber, Learner.log.size(), site.getSiteNumber());
+//                  System.out.println("Sending messages" + proposalNumber);
+                    PrepareMessage message = new PrepareMessage(proposalNumber, position, site.getSiteNumber());
+
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         approvalFrom.add(site.getSiteNumber());
                         acceptorInstance.processPrepareRequest(message);
@@ -85,7 +88,7 @@ public class Proposer {
                 // to send an accept message to acceptors
                 if(stage == 2) {
 
-                    AcceptMessage message = new AcceptMessage(Learner.log.size(), latestProposalCombination, maxProposalNumber, currentValue, site.getSiteNumber());
+                    AcceptMessage message = new AcceptMessage(position, latestProposalCombination, maxProposalNumber, currentValue, site.getSiteNumber());
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         acceptorInstance.processAcceptRequest(message);
                     }else {
@@ -108,8 +111,20 @@ public class Proposer {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
         currentValue = reservation;
+        Learner learner = Learner.getInstance();
 
         approvalFrom = new HashSet<>();
+
+        int position = 0;
+        for(String s: learner.log){
+            if(s == null){
+                break;
+            }
+            position++;
+        }
+
+        System.out.println("Proposing for Log Position" + position);
+
         acceptSent = false;
 
         if(method.equals("reserve"))
@@ -118,7 +133,7 @@ public class Proposer {
             System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
 
 
-        sendMessages(1);
+        sendMessages(1,position);
 
         try{
             future.get(3, TimeUnit.SECONDS);
@@ -130,7 +145,7 @@ public class Proposer {
         try {
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend();
+            checkSetAndAttemptSend(position);
         }catch (Exception e1){
            future.cancel(true);
         }
@@ -138,7 +153,7 @@ public class Proposer {
         try {
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend();
+            checkSetAndAttemptSend(position);
         }catch (Exception e1){
             future.cancel(true);
         }
@@ -146,7 +161,7 @@ public class Proposer {
         try {
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend();
+            checkSetAndAttemptSend(position);
         }catch (Exception e1){
             future.cancel(true);
         }
@@ -158,10 +173,10 @@ public class Proposer {
 
     }
 
-    private void checkSetAndAttemptSend() throws Exception {
+    private void checkSetAndAttemptSend(int position) throws Exception {
         if (approvalFrom.size() <= siteHashMap.size() / 2) {
             approvalFrom = new HashSet<>();
-            sendMessages(1);
+            sendMessages(1,position);
         } else {
             throw new Exception();
         }
@@ -205,7 +220,7 @@ public class Proposer {
 
                 System.err.println("% received accept messages from a majority");
                 if(prepareMessage.getFrom() != site.getSiteNumber())
-                    sendMessages(2);
+                    sendMessages(2,ack.getLogPosition());
 
                 acceptSent = true;
 

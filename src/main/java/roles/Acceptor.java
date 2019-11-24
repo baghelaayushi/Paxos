@@ -1,11 +1,20 @@
 package roles;
 
+
+import com.google.gson.*;
+import helpers.Event;
+
 import helpers.AcceptedRequest;
+
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +34,7 @@ public class Acceptor {
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
-//        this.accEntry = new HashMap<>();
+
         this.acceptedEntries = new HashMap<>();
         accNum = null;
         accValue = null;
@@ -42,11 +51,66 @@ public class Acceptor {
     }
 
 
+    /*static void saveState(){
+
+        try(FileWriter fw = new FileWriter("current_log.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<Integer,List<Integer>> entry: accEntry.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(entry.getValue());
+                tempArray.add(ob);
+                temp.add(entry.getKey().toString(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }*/
+    /*static void getState(){
+        try {
+            //convert the json string back to object
+            BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            accEntry = new HashMap<>();
+            for(JsonElement ob: parsed){
+                JsonObject temp = ob.getAsJsonObject();
+                Set<String> id = temp.keySet();
+                String s = "";
+                for(String myId:id)
+                    s = myId;
+
+                JsonArray array = temp.getAsJsonArray(s);
+                JsonElement obj = array.get(0);
+                List<String> cl = gson.fromJson(obj.getAsString(),List.class);
+                List<Integer> values = new ArrayList<>();
+                values.add(Integer.parseInt(cl.get(0)));
+                values.add(Integer.parseInt(cl.get(1)));
+                values.add(Integer.parseInt(cl.get(2)));
+                accEntry.put(Integer.parseInt(s),values);
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }*/
+
     private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
+
         learnmessage.setAccNum(String.valueOf(acceptedEntries.get(logPosition).getAccNum()));
         learnmessage.setAccValue(String.valueOf(acceptedEntries.get(logPosition).getAccVal()));
+
         learnmessage.setMessageType(8);
         learnmessage.setFrom(site.getSiteNumber());
         learnmessage.setLogPosition(logPosition);
@@ -102,10 +166,12 @@ public class Acceptor {
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
 //        System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
+            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
         }
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+
         if (Integer.parseInt(proposed) < prep) {
             ackmessage.setAck(false);
         }
@@ -115,6 +181,7 @@ public class Acceptor {
         ackmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
         ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
+        ackmessage.setLogPosition(message.getLogPosition());
 
         ackmessage.setMessageType(3);
 
@@ -130,11 +197,20 @@ public class Acceptor {
 
     public void processAcceptRequest(AcceptMessage message) {
 
+        Proposer proposer = Proposer.getInstance(null,null,null);
+
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
+
+        if(!acceptedEntries.containsKey(message.getLogPosition())) {
+            System.out.println("adding a new entry for " + message.getLogPosition());
+
+            acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
+        }
+
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
@@ -142,7 +218,11 @@ public class Acceptor {
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
 
-            sendAckMessages(sender,ackmessage);
+            if(sender == site.getSiteNumber()){
+                //TODO for nack
+            }else {
+                sendAckMessages(sender, ackmessage);
+            }
 
         }
         else{
@@ -150,6 +230,7 @@ public class Acceptor {
                 accNum = proposed;
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
+
 
                 AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
                 acceptedRequest.setMaxPrepare(maxPrepare);
@@ -161,9 +242,12 @@ public class Acceptor {
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
+                ackmessage.setLogPosition(message.getLogPosition());
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
-                    //TODO for nack
+
+//                    System.out.println("sending to myself");
+
                 }else {
                     sendAckMessages(sender, ackmessage);
                 }

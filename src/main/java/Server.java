@@ -83,8 +83,8 @@ public class Server {
 
 
         new Thread(()-> proposer = Proposer.getInstance(mySite,log, siteHashMap)).start();
-        new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();;
-        new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();;
+        new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();
+        new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();
 
 
 
