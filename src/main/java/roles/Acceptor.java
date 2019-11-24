@@ -14,12 +14,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
 
+import java.util.HashMap;
+import java.util.Map;
 
-//maxPre
-//accNum
-//accVal
 
 public class Acceptor {
     static Acceptor instance = null;
@@ -142,7 +140,6 @@ public class Acceptor {
 
     private void sendAckMessages(int sender, PrepareAck ack){
             try {
-                System.out.println("Sender is" + siteHashMap.get(siteIDMap.get(sender)).getIpAddress());
                 String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
                 int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -157,22 +154,6 @@ public class Acceptor {
 
     }
 
-    private void sendReconcileMessage(int sender, ReconcileMessage ack){
-        try {
-            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
-            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-            MessagingClient mClient = new MessagingClient(destinationAddress, port);
-
-
-            mClient.send(ack);
-            mClient.close();
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-
-    }
-
     public void processPrepareRequest(PrepareMessage message) {
         Proposer proposer = Proposer.getInstance(null,null,null);
         int sender = message.getFrom();
@@ -183,7 +164,7 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
         //if the log entry is empty for acceptor too
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
-        System.out.println("Accepting for Log Position " + message.getLogPosition());
+//        System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
             System.out.println("adding a new entry for " + message.getLogPosition());
 
@@ -233,7 +214,7 @@ public class Acceptor {
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
-            ackmessage.setaccNum(String.valueOf(maxPrepare));
+            ackmessage.setAccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
 
@@ -257,7 +238,7 @@ public class Acceptor {
                 acceptedRequest.setAccVal(accValue);
                 acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
 
-                ackmessage.setaccNum(accNum);
+                ackmessage.setAccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
@@ -276,7 +257,7 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-            System.out.println("Sending message to learner");
+//            System.out.println("Sending message to learner");
             sendCommitToLearner(sender,message.getLogPosition());
         }
 

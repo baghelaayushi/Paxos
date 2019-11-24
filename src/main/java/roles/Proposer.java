@@ -1,10 +1,8 @@
 package roles;
 
-import javafx.concurrent.Task;
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
-import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,7 +19,7 @@ public class Proposer {
     int maxProposalNumber = -1;
     String latestProposalCombination = "";
     HashMap<String, Site> siteHashMap = null;
-    static String currentValue = null;
+    String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
     boolean acceptSent = false;
 
@@ -52,8 +50,14 @@ public class Proposer {
 
         String proposalNumber = null;
 
-        if(stage == 1)
+        if(stage == 1){
             proposalNumber = getProposalNumber();
+            System.err.println("% sending prepare("+proposalNumber+") to all sites");
+        }
+
+        if(stage == 2){
+            System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
+        }
 
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
@@ -63,11 +67,10 @@ public class Proposer {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
                 Acceptor acceptorInstance  = Acceptor.getInstance();
-                Message m;
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-//                    System.out.println("Sending messages" + proposalNumber);
+                  System.out.println("Sending messages" + proposalNumber);
                     PrepareMessage message = new PrepareMessage(proposalNumber, position, site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
@@ -75,10 +78,10 @@ public class Proposer {
                         acceptorInstance.processPrepareRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
+
                         mClient.send(message);
                         mClient.close();
                     }
-
 
                 }
 
@@ -103,16 +106,15 @@ public class Proposer {
     }
 
 
+    public void initiateProposal(String reservation, String method){
 
-    public void initiateProposal(String reservation){
-
-        String input[] = reservation.split(" ");
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
         currentValue = reservation;
         Learner learner = Learner.getInstance();
 
         approvalFrom = new HashSet<>();
+
         int position = 0;
         for(String s: learner.log){
             if(s == null){
@@ -122,6 +124,15 @@ public class Proposer {
         }
 
         System.out.println("Proposing for Log Position" + position);
+
+        acceptSent = false;
+
+        if(method.equals("reserve"))
+            System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");
+        else
+            System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
+
+
         sendMessages(1,position);
 
         try{
@@ -155,8 +166,6 @@ public class Proposer {
             future.cancel(true);
         }
 
-
-
         currentValue = reservation;
 
         executor.shutdownNow();
@@ -176,7 +185,7 @@ public class Proposer {
     public void processProposalAcks(Message ack, boolean wasSupported){
 
 
-        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
+//        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
            System.out.println("The reservation was rejected");
@@ -188,6 +197,9 @@ public class Proposer {
 
             String proposed = prepareMessage.getAccNum();
 
+            System.err.println("% received promise("+prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+"" +
+                    ") from site " + prepareMessage.getFrom());
+
             if(prepareMessage.getAccValue() != null){
 
                 if(maxRecvdAckNum != -1){
@@ -197,7 +209,6 @@ public class Proposer {
                     }
                 }else{
                     maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
-                    System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
                     currentValue = prepareMessage.getAccValue();
                 }
 
@@ -207,6 +218,7 @@ public class Proposer {
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
+                System.err.println("% received accept messages from a majority");
                 if(prepareMessage.getFrom() != site.getSiteNumber())
                     sendMessages(2,ack.getLogPosition());
 

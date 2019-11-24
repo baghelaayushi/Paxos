@@ -22,6 +22,7 @@ public class MessagingClient {
         this.serverAddress = InetAddress.getByName(destinationAddr);
         this.port = port;
         Socket = new DatagramSocket(this.port-1);
+//        Socket = new DatagramSocket(this.port);
         scanner = new Scanner(System.in);
     }
 

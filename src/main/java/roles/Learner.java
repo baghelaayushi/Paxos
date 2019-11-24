@@ -25,6 +25,9 @@ public class Learner {
     List<Boolean> logCheck = new ArrayList<>();
     Site site = null;
 
+    static TreeMap<String, String> reservationMap = new TreeMap<>();
+
+
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
         this.site = siteInformation;
         this.siteHashMap = siteMap;
@@ -103,11 +106,10 @@ public class Learner {
 
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
-                    System.out.println("commiting at position" + requestedLogPosition);
-                    System.out.println("comitting value: " + accVal);
+                    System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
                     log[requestedLogPosition] = accVal;
-                    //saveState();
                     logCheck.add(requestedLogPosition,true);
+                    updateDictionary(accVal);
                 }
 
                 HashMap<String,Integer> temp = logMap.get(requestedLogPosition);
@@ -127,9 +129,33 @@ public class Learner {
 
     }
 
+    public static void updateDictionary(String value){
+
+        String reservationFor = value.split(" ")[1];
+
+        if (value.split(" ")[0].equals("reserve")){
+            String flights = value.split(" ")[2];
+            reservationMap.put(reservationFor, flights);
+        }
+        else reservationMap.remove(reservationFor);
+
+    }
+
+    public static void viewDictionary(){
+        for (Map.Entry record: reservationMap.entrySet()){
+            System.out.println(record.getKey() + " " + record.getValue());
+        }
+    }
+
     public static void viewLog(){
-        for(String s:learner.log)
+        int i =0;
+        for(String s:learner.log) {
+            if(i == 15){
+                break;
+            }
             System.out.println(s);
+            i++;
+        }
     }
 
     public static  String[] getLog(){

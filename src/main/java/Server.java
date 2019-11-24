@@ -64,10 +64,10 @@ public class Server {
                     siteInfo.get("udp_end_port").getAsString(),site_number++);
 
             siteHashMap.put(host.getKey(), site);
-            System.out.println("Adding to SHM" + host.getKey() + " " + site.getRandomPort());
+//            System.out.println("Adding to SHM" + host.getKey() + " " + site.getRandomPort());
 
             if(host.getKey().equalsIgnoreCase(self)){
-                System.out.println("Myself " + site.getIpAddress() + " " + site.getRandomPort());
+//                System.out.println("Myself " + site.getIpAddress() + " " + site.getRandomPort());
                 mySite = site;
             }
         }
@@ -78,7 +78,7 @@ public class Server {
 
     private static void initialize() throws Exception{
 
-        System.out.println("Starting local server at "+ mySite.getRandomPort());
+//        System.out.println("Starting local server at "+ mySite.getRandomPort());
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
 
@@ -114,13 +114,13 @@ public class Server {
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
-                    proposer.initiateProposal(inp);
+                    proposer.initiateProposal(inp,"reserve");
                     break;
                 case "cancel":
-                    //TODO: Cancel seats
+                    proposer.initiateProposal(inp,"cancel");
                     break;
                 case "view":
-                    //TODO: view
+                    Learner.viewDictionary();
                     break;
                 case "log":
                     Learner.viewLog();
