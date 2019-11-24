@@ -105,7 +105,7 @@ public class Proposer {
 
         approvalFrom = new HashSet<>();
 
-        System.out.println("Reservation submitted for " + reservation.split("")[1]);
+        System.out.println("Reservation submitted for " + reservation.split(" ")[1]);
 
         sendMessages(1);
 
