@@ -21,7 +21,7 @@ public class Learner {
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
-    static String[] log = new String[Integer.MAX_VALUE];
+    String[] log = new String[1000];
     List<Boolean> logCheck = new ArrayList<>();
     Site site = null;
 
@@ -52,7 +52,7 @@ public class Learner {
         try(FileWriter fw = new FileWriter("saved_log.json")){
             Gson gson = new Gson();
             JsonArray arr = new JsonArray();
-            for(String s:log){
+            for(String s:learner.log){
                 arr.add(s);
             }
             fw.append(gson.toJson(arr));
@@ -70,11 +70,11 @@ public class Learner {
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            log = new String[Integer.MAX_VALUE];
+            learner.log = new String[Integer.MAX_VALUE];
             int  i =0;
             for(JsonElement ob: parsed){
                 String s = ob.getAsString();
-                log[i] = s;
+                learner.log[i] = s;
             }
 
         } catch (IOException e) {
@@ -104,8 +104,9 @@ public class Learner {
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
                     System.out.println("commiting at position" + requestedLogPosition);
+                    System.out.println("comitting value: " + accVal);
                     log[requestedLogPosition] = accVal;
-                    saveState();
+                    //saveState();
                     logCheck.add(requestedLogPosition,true);
                 }
 
@@ -127,12 +128,12 @@ public class Learner {
     }
 
     public static void viewLog(){
-        for(String s:log)
+        for(String s:learner.log)
             System.out.println(s);
     }
 
     public static  String[] getLog(){
-        return log;
+        return learner.log;
     }
 
 

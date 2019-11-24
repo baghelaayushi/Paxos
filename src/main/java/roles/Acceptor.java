@@ -185,6 +185,7 @@ public class Acceptor {
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
         System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
+            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
         }
@@ -199,6 +200,7 @@ public class Acceptor {
         ackmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
         ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
+        ackmessage.setLogPosition(message.getLogPosition());
 
         ackmessage.setMessageType(3);
 
@@ -214,11 +216,19 @@ public class Acceptor {
 
     public void processAcceptRequest(AcceptMessage message) {
 
+        Proposer proposer = Proposer.getInstance(null,null,null);
+
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
+
+        if(!acceptedEntries.containsKey(message.getLogPosition())) {
+            System.out.println("adding a new entry for " + message.getLogPosition());
+
+            acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
+        }
 
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
         if (Integer.parseInt(proposed) < prep) {
@@ -227,7 +237,11 @@ public class Acceptor {
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
 
-            sendAckMessages(sender,ackmessage);
+            if(sender == site.getSiteNumber()){
+                //TODO for nack
+            }else {
+                sendAckMessages(sender, ackmessage);
+            }
 
         }
         else{
@@ -247,9 +261,12 @@ public class Acceptor {
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
+                ackmessage.setLogPosition(message.getLogPosition());
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
-                    //TODO for nack
+
+                    System.out.println("sending to myself");
+
                 }else {
                     sendAckMessages(sender, ackmessage);
                 }
