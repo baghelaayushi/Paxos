@@ -27,7 +27,6 @@ public class Acceptor {
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
-        this.siteHashMap = new HashMap<>();
         accNum = null;
         accValue = null;
     }
@@ -106,8 +105,8 @@ public class Acceptor {
     private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
-        learnmessage.setAccNum(accNum);
-        learnmessage.setAccValue(accValue);
+        learnmessage.setAccNum(accEntry.get(logPosition).get(1).toString());
+        learnmessage.setAccValue(accEntry.get(logPosition).get(2).toString());
         learnmessage.setMessageType(8);
         learnmessage.setFrom(site.getSiteNumber());
         learnmessage.setLogPosition(logPosition);
@@ -187,7 +186,7 @@ public class Acceptor {
             saveState();
         }
         int prep = accEntry.get(message.getLogPosition()).get(0);
-        if (Integer.parseInt(proposed) < maxPrepare) {
+        if (Integer.parseInt(proposed) < prep) {
             ackmessage.setAck(false);
         }
         else
@@ -232,7 +231,8 @@ public class Acceptor {
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
-        if (Integer.parseInt(proposed) < maxPrepare) {
+        int prep = accEntry.get(message.getLogPosition()).get(0);
+        if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setaccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
@@ -241,12 +241,16 @@ public class Acceptor {
             sendAckMessages(sender,ackmessage);
 
         }
-
-        if (Integer.parseInt(proposed) == maxPrepare) {
+        else{
             try {
                 accNum = message.getCompleteProposalNumber();
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
+                List<Integer> temp = accEntry.get(message.getLogPosition());
+                temp.add(0,maxPrepare);
+                temp.add(1,Integer.parseInt(accNum));
+                temp.add(2,Integer.parseInt(accValue));
+                accEntry.replace(message.getLogPosition(),temp);
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
