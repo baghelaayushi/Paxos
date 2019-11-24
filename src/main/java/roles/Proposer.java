@@ -70,7 +70,7 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-                  System.out.println("Sending messages" + proposalNumber);
+//                  System.out.println("Sending messages" + proposalNumber);
                     PrepareMessage message = new PrepareMessage(proposalNumber, position, site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){

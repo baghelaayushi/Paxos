@@ -246,7 +246,7 @@ public class Acceptor {
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
 
-                    System.out.println("sending to myself");
+//                    System.out.println("sending to myself");
 
                 }else {
                     sendAckMessages(sender, ackmessage);
