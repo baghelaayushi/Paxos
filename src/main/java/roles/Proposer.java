@@ -67,16 +67,14 @@ public class Proposer {
                 //to send a propose message to acceptor
                 if(stage == 1){
 //                    System.out.println("Sending messages" + proposalNumber);
+                    PrepareMessage message = new PrepareMessage(proposalNumber, Learner.log.size(), site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-//                        System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
-                        PrepareMessage message = composeProposal(proposalNumber);
-                        System.out.println("Proposing to self for " + message.getLogPosition());
                         acceptorInstance.processPrepareRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                        mClient.send(composeProposal(proposalNumber));
+                        mClient.send(message);
                         mClient.close();
                     }
 
@@ -86,11 +84,12 @@ public class Proposer {
                 // to send an accept message to acceptors
                 if(stage == 2) {
 
+                    AcceptMessage message = new AcceptMessage(Learner.log.size(), latestProposalCombination, maxProposalNumber, currentValue, site.getSiteNumber());
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-                        acceptorInstance.processAcceptRequest(composeAccept());
+                        acceptorInstance.processAcceptRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                        mClient.send(composeAccept());
+                        mClient.send(message);
                         mClient.close();
                     }
                 }
@@ -100,29 +99,6 @@ public class Proposer {
             }
         }
 
-    }
-
-
-    private PrepareMessage composeProposal(String proposalNumber){
-
-        PrepareMessage proposalMessage = new PrepareMessage();
-        proposalMessage.setProposalNumber(proposalNumber);
-        proposalMessage.setMessageType(1);
-        proposalMessage.setLogPosition(Learner.log.size());
-        proposalMessage.setFrom(site.getSiteNumber());
-        return proposalMessage;
-
-    }
-
-    private AcceptMessage composeAccept(){
-        AcceptMessage acceptMessage = new AcceptMessage();
-        acceptMessage.setMessageType(2);
-        acceptMessage.setLogPosition(Learner.log.size());
-        acceptMessage.setCompleteProposalNumber(latestProposalCombination);
-        acceptMessage.setProposalNumber(maxProposalNumber);
-        acceptMessage.setProposedValue(currentValue);
-        acceptMessage.setFrom(site.getSiteNumber());
-        return acceptMessage;
     }
 
 
