@@ -100,7 +100,7 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
         //if the log entry is empty for acceptor too
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
-        System.out.println("Accepting for Log Position " + message.getLogPosition());
+//        System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
@@ -173,7 +173,7 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-            System.out.println("Sending message to learner");
+//            System.out.println("Sending message to learner");
             sendCommitToLearner(sender,message.getLogPosition());
         }
 

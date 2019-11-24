@@ -157,7 +157,7 @@ public class Proposer {
     public void processProposalAcks(Message ack, boolean wasSupported){
 
 
-        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
+//        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
            System.out.println("The reservation was rejected");

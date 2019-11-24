@@ -62,7 +62,8 @@ public class Learner {
 
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
-                    System.out.println("commiting at position" + requestedLogPosition);
+//                    System.out.println("commiting at position" + requestedLogPosition);
+                    System.out.println("Reservation submitted for "+ accVal);
                     log.add(requestedLogPosition,accVal);
                     logCheck.add(requestedLogPosition,true);
                 }
@@ -85,6 +86,7 @@ public class Learner {
     }
 
     public static void viewLog(){
+        System.out.println("Printing the log");
         for(String s:log)
             System.out.println(s);
     }
