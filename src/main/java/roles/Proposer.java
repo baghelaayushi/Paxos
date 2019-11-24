@@ -1,12 +1,8 @@
 package roles;
 
-import javafx.concurrent.Task;
-import messaging.helpers.AcceptMessage;
-import messaging.helpers.Message;
-import messaging.helpers.PrepareMessage;
+import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
-import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,17 +18,17 @@ public class Proposer {
     Site site = null;
     int maxProposalNumber = -1;
     String latestProposalCombination = "";
-    List<String> log = null;
     HashMap<String, Site> siteHashMap = null;
     String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
     boolean acceptSent = false;
 
+    int maxRecvdAckNum = -1;
+
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
 
         //TODO:System could have crashed, check that.
         this.site = siteInformation;
-        this.log = log;
         this.siteHashMap = siteMap;
     }
     public static Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
@@ -64,32 +60,31 @@ public class Proposer {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
                 Acceptor acceptorInstance  = Acceptor.getInstance();
-                Message m;
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-//                    System.out.println("Sending messages" + proposalNumber);
+                    PrepareMessage message = new PrepareMessage(proposalNumber, Learner.log.size(), site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-//                        System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
-                        acceptorInstance.processPrepareRequest(composeProposal(proposalNumber));
+                        acceptorInstance.processPrepareRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                        mClient.send(composeProposal(proposalNumber));
+                        mClient.send(message);
                         mClient.close();
                     }
-
 
                 }
 
                 // to send an accept message to acceptors
                 if(stage == 2) {
+
+                    AcceptMessage message = new AcceptMessage(Learner.log.size(), latestProposalCombination, maxProposalNumber, currentValue, site.getSiteNumber());
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
-                        acceptorInstance.processAcceptRequest(composeAccept());
+                        acceptorInstance.processAcceptRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                        mClient.send(composeAccept());
+                        mClient.send(message);
                         mClient.close();
                     }
                 }
@@ -102,35 +97,14 @@ public class Proposer {
     }
 
 
-    private PrepareMessage composeProposal(String proposalNumber){
-
-        PrepareMessage proposalMessage = new PrepareMessage();
-        proposalMessage.setProposalNumber(proposalNumber);
-        proposalMessage.setMessageType(1);
-        proposalMessage.setLogPosition(log.size());
-        proposalMessage.setFrom(site.getSiteNumber());
-        return proposalMessage;
-
-    }
-
-    private AcceptMessage composeAccept(){
-        AcceptMessage acceptMessage = new AcceptMessage();
-        acceptMessage.setMessageType(2);
-        acceptMessage.setLogPosition(log.size());
-        acceptMessage.setCompleteProposalNumber(latestProposalCombination);
-        acceptMessage.setProposalNumber(maxProposalNumber);
-        acceptMessage.setProposedValue(currentValue);
-        return acceptMessage;
-    }
-
     public void initiateProposal(String reservation){
 
-        String input[] = reservation.split(" ");
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        currentValue = reservation;
         Future<String> future = executor.submit(new Tasks());
+        currentValue = reservation;
 
         approvalFrom = new HashSet<>();
+
         sendMessages(1);
 
         try{
@@ -164,8 +138,6 @@ public class Proposer {
             future.cancel(true);
         }
 
-
-
         currentValue = reservation;
 
         executor.shutdownNow();
@@ -184,16 +156,41 @@ public class Proposer {
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
-        System.out.println("Received ack from " + ack.getFrom() + " for position " + ack.getLogPosition());
-        if(!wasSupported){
-            //TODO:Proposal was denied
 
+        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
+        if(!wasSupported){
+            //TODO:Proposal was denied, need to propose with a bigger proposal num
+           System.out.println("The reservation was rejected");
         }else{
             //TODO: Add to the set
-            approvalFrom.add(ack.getFrom());
+            PrepareAck prepareMessage = (PrepareAck)ack;
+
+            approvalFrom.add(prepareMessage.getFrom());
+
+            String proposed = prepareMessage.getAccNum();
+
+            if(prepareMessage.getAccValue() != null){
+
+                if(maxRecvdAckNum != -1){
+                    if(Integer.parseInt(proposed) > maxRecvdAckNum){
+                        maxRecvdAckNum = Integer.parseInt(proposed);
+                        currentValue = prepareMessage.getAccValue();
+                    }
+                }else{
+                    maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
+                    System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
+                    currentValue = prepareMessage.getAccValue();
+                }
+
+
+            }
+
+
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
-                sendMessages(2);
+                if(prepareMessage.getFrom() != site.getSiteNumber())
+                    sendMessages(2);
+
                 acceptSent = true;
 
             }

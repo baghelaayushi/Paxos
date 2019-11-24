@@ -27,6 +27,9 @@ public class Learner {
         this.logMap = new HashMap<>();
         accNum = null;
         accValue = null;
+        for (int i =0 ; i < 10; i++){
+            logCheck.add(false);
+        }
     }
 
     public static Learner getInstance(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -39,40 +42,58 @@ public class Learner {
         return learner;
     }
 
-    public void Listen(LearnMessage message){
+    public void learner(LearnMessage message){
+
         String accNum = message.getAccNum();
         String accVal = message.getAccValue();
-        int logPosition = message.getLogPosition();
-        int maxSites = siteHashMap.size()/2+1;
 
-        if(logMap.containsKey(logPosition)){
-             if(logMap.get(logPosition).containsKey(accNum + '-' + accVal)){
-                int count = logMap.get(logPosition).get(accNum + '-' + accVal);
-                System.out.println(count);
-                if(count+1>=maxSites && !logCheck.get(logPosition)){
-                    System.out.println("commiting");
-                    log.add(logPosition,accVal);
-                    System.out.println(log.get(logPosition));
-                    logCheck.add(logPosition,true);
+        int requestedLogPosition = message.getLogPosition();
+
+        int siteQuorum = siteHashMap.size()/2+1;
+
+
+        //Have we received anything for this log position?
+        if(logMap.containsKey(requestedLogPosition)){
+
+            //Have we received this same copy of accNum and accVal?
+             if(logMap.get(requestedLogPosition).containsKey(accNum + '-' + accVal)){
+
+                int count = logMap.get(requestedLogPosition).get(accNum + '-' + accVal);
+
+                if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
+
+                    System.out.println("commiting at position" + requestedLogPosition);
+                    log.add(requestedLogPosition,accVal);
+                    logCheck.add(requestedLogPosition,true);
                 }
-                HashMap<String,Integer> temp = logMap.get(logPosition);
+
+                HashMap<String,Integer> temp = logMap.get(requestedLogPosition);
                 temp.replace(accNum + '-' + accVal,count+1);
-                logMap.replace(logPosition,temp);
+                logMap.replace(requestedLogPosition,temp);
             }
             else {
-                logMap.get(logPosition).put(accNum + '-' + accVal,1);
+                logMap.get(requestedLogPosition).put(accNum + '-' + accVal,1);
             }
+
         }
         else {
             HashMap<String,Integer> temp = new HashMap<>();
             temp.put(accNum + '-' + accVal,1);
-            logMap.put(logPosition,temp);
+            logMap.put(requestedLogPosition,temp);
         }
 
     }
+
     public static void viewLog(){
         for(String s:log)
             System.out.println(s);
     }
+
+    public static  List<String> getLog(){
+        return log;
+    }
+
+
+
 
 }

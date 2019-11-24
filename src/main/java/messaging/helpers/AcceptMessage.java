@@ -1,6 +1,9 @@
 package messaging.helpers;
 
+import roles.Learner;
+
 public class AcceptMessage extends Message {
+    final int messageType = 2;
     public int getProposalNumber() {
         return proposalNumber;
     }
@@ -31,4 +34,13 @@ public class AcceptMessage extends Message {
 
     String proposedValue;
 
+    public AcceptMessage(int logPosition, String latestProposalCombination, int maxProposalNumber, String proposedValue, int siteNumber){
+            super.setMessageType(messageType);
+            super.setLogPosition(logPosition);
+            setCompleteProposalNumber(latestProposalCombination);
+            setProposalNumber(maxProposalNumber);
+            setProposedValue(proposedValue);
+            super.setFrom(siteNumber);
+
+    }
 }

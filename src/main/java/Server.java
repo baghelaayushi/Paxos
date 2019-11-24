@@ -36,6 +36,7 @@ public class Server {
 
     public static void bootstrapProject(String selfIdentifier){
 
+        System.out.println("Starting as " + selfIdentifier);
         try {
             processHosts(selfIdentifier);
             initialize();
@@ -53,7 +54,7 @@ public class Server {
         JsonObject hostsObject = parser.parse(hosts).getAsJsonObject().get("hosts").getAsJsonObject();
 
         number_of_hosts = hostsObject.keySet().size();
-        int site_number =0 ;
+        int site_number = 1 ;
 
         for (Map.Entry<String, JsonElement> host : hostsObject.entrySet()){
             JsonObject siteInfo = host.getValue().getAsJsonObject();
@@ -63,9 +64,10 @@ public class Server {
                     siteInfo.get("udp_end_port").getAsString(),site_number++);
 
             siteHashMap.put(host.getKey(), site);
-
+            System.out.println("Adding to SHM" + host.getKey() + " " + site.getRandomPort());
 
             if(host.getKey().equalsIgnoreCase(self)){
+                System.out.println("Myself " + site.getIpAddress() + " " + site.getRandomPort());
                 mySite = site;
             }
         }
@@ -76,6 +78,7 @@ public class Server {
 
     private static void initialize() throws Exception{
 
+        System.out.println("Starting local server at "+ mySite.getRandomPort());
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
 

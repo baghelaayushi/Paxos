@@ -20,6 +20,12 @@
       "udp_start_port": 15007,
       "udp_end_port": 15009,
       "ip_address": "172.20.0.4"
+    },
+    "mango": {
+      "udp_start_port": 15010,
+      "udp_end_port": 15013,
+      "ip_address": "172.20.0.5"
     }
+
   }
 }

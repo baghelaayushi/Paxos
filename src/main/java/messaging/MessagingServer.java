@@ -68,21 +68,15 @@ public class MessagingServer {
                         //TODO: Go to proposer
                         break;
                     case 5:
-//                        System.out.println("Received a nack for log position");
+                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
-                        break;
-                    case 6:
-//                        System.out.println("Recieved an ack for proposal");
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 7:
 //                        System.out.println("Recieved nack for accept message");
                         //TODO: Send to proposer
                         break;
                     case 8:
-//                        System.out.println("recieved a learn message, will check if can commit it hahahaha");
-                        learner.Listen((LearnMessage) message);
-                        //TODO: Send to learner and maybe proposer
+                        learner.learner((LearnMessage) message);
                 }
 
             } catch (Exception e) {
