@@ -110,6 +110,7 @@ public class Proposer {
         currentValue = reservation;
 
         approvalFrom = new HashSet<>();
+        acceptSent = false;
 
         if(method.equals("reserve"))
             System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");

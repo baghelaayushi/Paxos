@@ -44,26 +44,19 @@ public class MessagingServer {
                 Acceptor instance = Acceptor.getInstance();
                 Learner learner = Learner.getInstance();
 
-
-//                System.out.println(message.getMessageType());
-
                 switch (message.getMessageType()){
                     case 1:
-//                        System.out.println("Received a prepare message");
                         instance.processPrepareRequest((PrepareMessage) message);
                         //TODO:Go to acceptor
                         break;
                     case 2:
-//                        System.out.println("Received an accept message");
                         instance.processAcceptRequest((AcceptMessage)message);
                         //TODO: Go to acceptor
                         break;
                     case 3:
-//                        System.out.println("Received a promise message");
                         Proposer.getInstance(null,null,null).processProposalAcks(message,true);
                         break;
                     case 4:
-//                        System.out.println("Received an nack for proposal");
                         Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
                         break;

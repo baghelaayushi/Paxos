@@ -90,10 +90,11 @@ public class Learner {
     public static void updateDictionary(String value){
 
         String reservationFor = value.split(" ")[1];
-        String flights = value.split(" ")[2];
 
-        if (value.split(" ")[0].equals("reserve"))
+        if (value.split(" ")[0].equals("reserve")){
+            String flights = value.split(" ")[2];
             reservationMap.put(reservationFor, flights);
+        }
         else reservationMap.remove(reservationFor);
 
     }
