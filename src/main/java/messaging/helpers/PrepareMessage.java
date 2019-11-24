@@ -18,7 +18,7 @@ public class PrepareMessage extends Message {
 
     public PrepareMessage(String proposalNumber, int logSize, int siteNumber){
 
-        super.setLogPosition(logPosition);
+        super.setLogPosition(logSize);
         super.setFrom(siteNumber);
         super.setMessageType(messageType);
         setProposalNumber(proposalNumber);
