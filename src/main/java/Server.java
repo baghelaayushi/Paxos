@@ -120,7 +120,7 @@ public class Server {
                     //TODO: Cancel seats
                     break;
                 case "view":
-                    //TODO: view
+                    Learner.viewLog();
                     break;
                 case "log":
                     Learner.viewLog();
