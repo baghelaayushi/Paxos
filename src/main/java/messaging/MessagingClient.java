@@ -21,7 +21,7 @@ public class MessagingClient {
     public MessagingClient(String destinationAddr, int port) throws IOException {
         this.serverAddress = InetAddress.getByName(destinationAddr);
         this.port = port;
-        Socket = new DatagramSocket(this.port);
+        Socket = new DatagramSocket(this.port-1);
         scanner = new Scanner(System.in);
     }
 

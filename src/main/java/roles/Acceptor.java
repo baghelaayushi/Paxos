@@ -1,5 +1,6 @@
 package roles;
 
+import helpers.AcceptedRequest;
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
@@ -10,12 +11,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+//maxPre
+//accNum
+//accVal
+
 public class Acceptor {
     static Acceptor instance = null;
     int maxPrepare = -1;
-    static HashMap<Integer, List<Integer>>  accEntry = null;
-    static String accNum;
-    static String accValue;
+    HashMap<Integer, AcceptedRequest>  acceptedEntries = null;
+    String accNum;
+    String accValue;
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     Site site = null;
@@ -25,7 +31,8 @@ public class Acceptor {
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
-        this.siteHashMap = new HashMap<>();
+//        this.accEntry = new HashMap<>();
+        this.acceptedEntries = new HashMap<>();
         accNum = null;
         accValue = null;
     }
@@ -40,19 +47,12 @@ public class Acceptor {
         return instance;
     }
 
-    public String getAccNumAccVal(){
-        //returns ack for the first call
-        if(accNum== null && accValue == null)
-            return null;
-
-        return accNum+"-"+accValue;
-    }
 
     private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
-        learnmessage.setAccNum(accNum);
-        learnmessage.setAccValue(accValue);
+        learnmessage.setAccNum(String.valueOf(acceptedEntries.get(logPosition).getAccNum()));
+        learnmessage.setAccValue(String.valueOf(acceptedEntries.get(logPosition).getAccVal()));
         learnmessage.setMessageType(8);
         learnmessage.setFrom(site.getSiteNumber());
         learnmessage.setLogPosition(logPosition);
@@ -82,6 +82,7 @@ public class Acceptor {
 
     private void sendAckMessages(int sender, PrepareAck ack){
             try {
+                System.out.println("Sender is" + siteHashMap.get(siteIDMap.get(sender)).getIpAddress());
                 String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
                 int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -122,23 +123,20 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
         //if the log entry is empty for acceptor too
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
-        if(!accEntry.containsKey(message.getLogPosition())) {
+        System.out.println("Accepting for Log Position " + message.getLogPosition());
+        if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
-            List<Integer> tempVal = new ArrayList<>();
-            tempVal.add(Integer.parseInt(proposed));
-            tempVal.add(-1);
-            tempVal.add(-1);
-            accEntry.put(message.getLogPosition(), tempVal);
+            acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
         }
-        int prep = accEntry.get(message.getLogPosition()).get(0);
-        if (Integer.parseInt(proposed) < maxPrepare) {
+        int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+        if (Integer.parseInt(proposed) < prep) {
             ackmessage.setAck(false);
         }
         else
             ackmessage.setAck(true);
 
-        ackmessage.setaccNum(accEntry.get(message.getLogPosition()).get(1).toString());
-        ackmessage.setAccValue(accEntry.get(message.getLogPosition()).get(2).toString());
+        ackmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
+        ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
 
         ackmessage.setMessageType(3);
@@ -151,22 +149,6 @@ public class Acceptor {
         }
         maxPrepare = Integer.parseInt(proposed);
 
-
-
-
-
-
-        /*if(message.getLogPosition() < myLogPosition) {
-            //TODO: Responding to someone who has wholes in the log
-            System.out.println("There are holes in your log, go fix them");
-            ReconcileMessage reconcileMessage = new ReconcileMessage();
-            reconcileMessage.setFrom(site.getSiteNumber());
-            reconcileMessage.setLog(Learner.getLog());
-            reconcileMessage.setAck(false);
-            reconcileMessage.setMessageType(5);
-            sendReconcileMessage(sender, reconcileMessage);
-        }*/
-
     }
 
     public void processAcceptRequest(AcceptMessage message) {
@@ -176,7 +158,8 @@ public class Acceptor {
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
-        if (Integer.parseInt(proposed) < maxPrepare) {
+        int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+        if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setaccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
@@ -185,12 +168,18 @@ public class Acceptor {
             sendAckMessages(sender,ackmessage);
 
         }
-
-        if (Integer.parseInt(proposed) == maxPrepare) {
+        else{
             try {
-                accNum = message.getCompleteProposalNumber();
+                accNum = proposed;
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
+
+                AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
+                acceptedRequest.setMaxPrepare(maxPrepare);
+                acceptedRequest.setAccNum(Integer.parseInt(accNum));
+                acceptedRequest.setAccVal(accValue);
+                acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
+
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
