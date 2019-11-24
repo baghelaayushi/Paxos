@@ -50,8 +50,14 @@ public class Proposer {
 
         String proposalNumber = null;
 
-        if(stage == 1)
+        if(stage == 1){
             proposalNumber = getProposalNumber();
+            System.err.println("% sending prepare("+proposalNumber+") to all sites");
+        }
+
+        if(stage == 2){
+            System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
+        }
 
         for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
 
@@ -64,12 +70,12 @@ public class Proposer {
                 //to send a propose message to acceptor
                 if(stage == 1){
                     PrepareMessage message = new PrepareMessage(proposalNumber, Learner.log.size(), site.getSiteNumber());
-
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         approvalFrom.add(site.getSiteNumber());
                         acceptorInstance.processPrepareRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
+
                         mClient.send(message);
                         mClient.close();
                     }
@@ -97,7 +103,7 @@ public class Proposer {
     }
 
 
-    public void initiateProposal(String reservation){
+    public void initiateProposal(String reservation, String method){
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
@@ -105,7 +111,11 @@ public class Proposer {
 
         approvalFrom = new HashSet<>();
 
-        System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");
+        if(method.equals("reserve"))
+            System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");
+        else
+            System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
+
 
         sendMessages(1);
 
@@ -171,6 +181,9 @@ public class Proposer {
 
             String proposed = prepareMessage.getAccNum();
 
+            System.err.println("% received promise("+prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+"" +
+                    ") from site " + prepareMessage.getFrom());
+
             if(prepareMessage.getAccValue() != null){
 
                 if(maxRecvdAckNum != -1){
@@ -180,7 +193,6 @@ public class Proposer {
                     }
                 }else{
                     maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
-                    System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
                     currentValue = prepareMessage.getAccValue();
                 }
 
@@ -190,6 +202,7 @@ public class Proposer {
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
+                System.err.println("% received accept messages from a majority");
                 if(prepareMessage.getFrom() != site.getSiteNumber())
                     sendMessages(2);
 

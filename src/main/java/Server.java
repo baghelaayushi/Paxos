@@ -36,7 +36,7 @@ public class Server {
 
     public static void bootstrapProject(String selfIdentifier){
 
-//        System.out.println("Starting as " + selfIdentifier);
+        System.out.println("Starting as " + selfIdentifier);
         try {
             processHosts(selfIdentifier);
             initialize();
@@ -114,13 +114,13 @@ public class Server {
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
-                    proposer.initiateProposal(inp);
+                    proposer.initiateProposal(inp,"reserve");
                     break;
                 case "cancel":
-                    //TODO: Cancel seats
+                    proposer.initiateProposal(inp,"cancel");
                     break;
                 case "view":
-                    Learner.viewLog();
+                    Learner.viewDictionary();
                     break;
                 case "log":
                     Learner.viewLog();
