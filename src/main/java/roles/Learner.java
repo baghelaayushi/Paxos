@@ -86,9 +86,8 @@ public class Learner {
     }
 
     public static void viewLog(){
-        System.out.println("Printing the log");
         for(String s:log)
-            System.out.println(s);
+            System.out.println(s.split(" ")[1] + s.split(" ")[2]);
     }
 
     public static  List<String> getLog(){
