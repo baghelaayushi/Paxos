@@ -1,10 +1,8 @@
 package roles;
 
-import javafx.concurrent.Task;
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
-import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,7 +19,7 @@ public class Proposer {
     int maxProposalNumber = -1;
     String latestProposalCombination = "";
     HashMap<String, Site> siteHashMap = null;
-    static String currentValue = null;
+    String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
     boolean acceptSent = false;
 
@@ -62,11 +60,9 @@ public class Proposer {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
                 Acceptor acceptorInstance  = Acceptor.getInstance();
-                Message m;
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-//                    System.out.println("Sending messages" + proposalNumber);
                     PrepareMessage message = new PrepareMessage(proposalNumber, Learner.log.size(), site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
@@ -77,7 +73,6 @@ public class Proposer {
                         mClient.send(message);
                         mClient.close();
                     }
-
 
                 }
 
@@ -104,14 +99,12 @@ public class Proposer {
 
     public void initiateProposal(String reservation){
 
-        String input[] = reservation.split(" ");
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
         currentValue = reservation;
 
         approvalFrom = new HashSet<>();
 
-        System.out.println("Proposing for Log Position" + Learner.log.size());
         sendMessages(1);
 
         try{
@@ -144,8 +137,6 @@ public class Proposer {
         }catch (Exception e1){
             future.cancel(true);
         }
-
-
 
         currentValue = reservation;
 

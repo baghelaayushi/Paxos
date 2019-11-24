@@ -6,15 +6,9 @@ import helpers.Site;
 import messaging.MessagingClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-
-//maxPre
-//accNum
-//accVal
 
 public class Acceptor {
     static Acceptor instance = null;
@@ -82,7 +76,6 @@ public class Acceptor {
 
     private void sendAckMessages(int sender, PrepareAck ack){
             try {
-                System.out.println("Sender is" + siteHashMap.get(siteIDMap.get(sender)).getIpAddress());
                 String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
                 int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -94,22 +87,6 @@ public class Acceptor {
             catch (IOException e){
                 e.printStackTrace();
             }
-
-    }
-
-    private void sendReconcileMessage(int sender, ReconcileMessage ack){
-        try {
-            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
-            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-            MessagingClient mClient = new MessagingClient(destinationAddress, port);
-
-
-            mClient.send(ack);
-            mClient.close();
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
 
     }
 
@@ -161,7 +138,7 @@ public class Acceptor {
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
-            ackmessage.setaccNum(String.valueOf(maxPrepare));
+            ackmessage.setAccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
 
@@ -180,7 +157,7 @@ public class Acceptor {
                 acceptedRequest.setAccVal(accValue);
                 acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
 
-                ackmessage.setaccNum(accNum);
+                ackmessage.setAccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
