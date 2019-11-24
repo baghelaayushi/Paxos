@@ -63,7 +63,7 @@ public class Learner {
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
 //                    System.out.println("commiting at position" + requestedLogPosition);
-                    System.out.println("Reservation submitted for "+ accVal);
+//                    System.out.println("Reservation submitted for "+ accVal);
                     log.add(requestedLogPosition,accVal);
                     logCheck.add(requestedLogPosition,true);
                 }
