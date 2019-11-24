@@ -1,7 +1,11 @@
 package roles;
 
+
 import com.google.gson.*;
 import helpers.Event;
+
+import helpers.AcceptedRequest;
+
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
@@ -12,12 +16,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+
+//maxPre
+//accNum
+//accVal
+
 public class Acceptor {
     static Acceptor instance = null;
     int maxPrepare = -1;
-    static HashMap<Integer, List<Integer>>  accEntry = null;
-    static String accNum;
-    static String accValue;
+    HashMap<Integer, AcceptedRequest>  acceptedEntries = null;
+    String accNum;
+    String accValue;
     HashMap<String, Site> siteHashMap = null;
     HashMap<Integer,String> siteIDMap = null;
     Site site = null;
@@ -27,6 +36,8 @@ public class Acceptor {
         this.maxPrepare = 0;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
+
+        this.acceptedEntries = new HashMap<>();
         accNum = null;
         accValue = null;
     }
@@ -41,15 +52,8 @@ public class Acceptor {
         return instance;
     }
 
-    public String getAccNumAccVal(){
-        //returns ack for the first call
-        if(accNum== null && accValue == null)
-            return null;
 
-        return accNum+"-"+accValue;
-    }
-
-    static void saveState(){
+    /*static void saveState(){
 
         try(FileWriter fw = new FileWriter("current_log.json")){
             Gson gson = new Gson();
@@ -69,8 +73,8 @@ public class Acceptor {
         }
 
 
-    }
-    static void getState(){
+    }*/
+    /*static void getState(){
         try {
             //convert the json string back to object
             BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
@@ -100,13 +104,15 @@ public class Acceptor {
             e.printStackTrace();
         }
 
-    }
+    }*/
 
     private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
         LearnMessage learnmessage = new LearnMessage();
-        learnmessage.setAccNum(accEntry.get(logPosition).get(1).toString());
-        learnmessage.setAccValue(accEntry.get(logPosition).get(2).toString());
+
+        learnmessage.setAccNum(String.valueOf(acceptedEntries.get(logPosition).getAccNum()));
+        learnmessage.setAccValue(String.valueOf(acceptedEntries.get(logPosition).getAccVal()));
+
         learnmessage.setMessageType(8);
         learnmessage.setFrom(site.getSiteNumber());
         learnmessage.setLogPosition(logPosition);
@@ -136,6 +142,7 @@ public class Acceptor {
 
     private void sendAckMessages(int sender, PrepareAck ack){
             try {
+                System.out.println("Sender is" + siteHashMap.get(siteIDMap.get(sender)).getIpAddress());
                 String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
                 int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
                 MessagingClient mClient = new MessagingClient(destinationAddress, port);
@@ -176,24 +183,21 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
         //if the log entry is empty for acceptor too
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
-        if(!accEntry.containsKey(message.getLogPosition())) {
+        System.out.println("Accepting for Log Position " + message.getLogPosition());
+        if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
-            List<Integer> tempVal = new ArrayList<>();
-            tempVal.add(Integer.parseInt(proposed));
-            tempVal.add(-1);
-            tempVal.add(-1);
-            accEntry.put(message.getLogPosition(), tempVal);
-            saveState();
+            acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
         }
-        int prep = accEntry.get(message.getLogPosition()).get(0);
+        int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+
         if (Integer.parseInt(proposed) < prep) {
             ackmessage.setAck(false);
         }
         else
             ackmessage.setAck(true);
 
-        ackmessage.setaccNum(accEntry.get(message.getLogPosition()).get(1).toString());
-        ackmessage.setAccValue(accEntry.get(message.getLogPosition()).get(2).toString());
+        ackmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
+        ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
 
         ackmessage.setMessageType(3);
@@ -206,22 +210,6 @@ public class Acceptor {
         }
         maxPrepare = Integer.parseInt(proposed);
 
-
-
-
-
-
-        /*if(message.getLogPosition() < myLogPosition) {
-            //TODO: Responding to someone who has wholes in the log
-            System.out.println("There are holes in your log, go fix them");
-            ReconcileMessage reconcileMessage = new ReconcileMessage();
-            reconcileMessage.setFrom(site.getSiteNumber());
-            reconcileMessage.setLog(Learner.getLog());
-            reconcileMessage.setAck(false);
-            reconcileMessage.setMessageType(5);
-            sendReconcileMessage(sender, reconcileMessage);
-        }*/
-
     }
 
     public void processAcceptRequest(AcceptMessage message) {
@@ -231,7 +219,8 @@ public class Acceptor {
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
-        int prep = accEntry.get(message.getLogPosition()).get(0);
+
+        int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setaccNum(String.valueOf(maxPrepare));
@@ -243,14 +232,17 @@ public class Acceptor {
         }
         else{
             try {
-                accNum = message.getCompleteProposalNumber();
+                accNum = proposed;
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
-                List<Integer> temp = accEntry.get(message.getLogPosition());
-                temp.add(0,maxPrepare);
-                temp.add(1,Integer.parseInt(accNum));
-                temp.add(2,Integer.parseInt(accValue));
-                accEntry.replace(message.getLogPosition(),temp);
+
+
+                AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
+                acceptedRequest.setMaxPrepare(maxPrepare);
+                acceptedRequest.setAccNum(Integer.parseInt(accNum));
+                acceptedRequest.setAccVal(accValue);
+                acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
+
                 ackmessage.setaccNum(accNum);
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);

@@ -1,12 +1,9 @@
 package roles;
 
 import javafx.concurrent.Task;
-import messaging.helpers.AcceptMessage;
-import messaging.helpers.Message;
-import messaging.helpers.PrepareMessage;
+import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
-import messaging.helpers.ReconcileMessage;
 import sun.security.util.ManifestEntryVerifier;
 
 import java.io.IOException;
@@ -24,9 +21,11 @@ public class Proposer {
     int maxProposalNumber = -1;
     String latestProposalCombination = "";
     HashMap<String, Site> siteHashMap = null;
-    String currentValue = null;
+    static String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
     boolean acceptSent = false;
+
+    int maxRecvdAckNum = -1;
 
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
 
@@ -72,7 +71,9 @@ public class Proposer {
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
 //                        System.out.println("Adding self to acceptor");
                         approvalFrom.add(site.getSiteNumber());
-                        acceptorInstance.processPrepareRequest(composeProposal(proposalNumber));
+                        PrepareMessage message = composeProposal(proposalNumber);
+                        System.out.println("Proposing to self for " + message.getLogPosition());
+                        acceptorInstance.processPrepareRequest(message);
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
                         mClient.send(composeProposal(proposalNumber));
@@ -84,6 +85,7 @@ public class Proposer {
 
                 // to send an accept message to acceptors
                 if(stage == 2) {
+
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         acceptorInstance.processAcceptRequest(composeAccept());
                     }else {
@@ -128,8 +130,8 @@ public class Proposer {
 
         String input[] = reservation.split(" ");
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        currentValue = reservation;
         Future<String> future = executor.submit(new Tasks());
+        currentValue = reservation;
 
         approvalFrom = new HashSet<>();
 
@@ -187,16 +189,27 @@ public class Proposer {
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
+
         System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
            System.out.println("The reservation was rejected");
         }else{
             //TODO: Add to the set
-            approvalFrom.add(ack.getFrom());
+            PrepareAck prepareMessage = (PrepareAck)ack;
+
+            approvalFrom.add(prepareMessage.getFrom());
+
+            String proposed = prepareMessage.getAccNum();
+
+            if(Integer.parseInt(proposed) < maxRecvdAckNum){
+                System.out.println("There seems to be a value existing for this log position, now prpoposing"+ prepareMessage.getAccValue());
+                currentValue = prepareMessage.getAccValue();
+            }
+
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
-                if(ack.getFrom() != site.getSiteNumber())
+                if(prepareMessage.getFrom() != site.getSiteNumber())
                     sendMessages(2);
 
                 acceptSent = true;
