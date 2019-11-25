@@ -2,11 +2,13 @@ package messaging.helpers;
 
 import roles.Learner;
 
-public class PrepareMessage extends Message {
+import java.io.Serializable;
+
+public class PrepareMessage extends Message implements Serializable {
 
 
     String proposalNumber;
-    static final int messageType = 1;
+    final int messageType = 1;
 
     public String getProposalNumber() {
         return proposalNumber;

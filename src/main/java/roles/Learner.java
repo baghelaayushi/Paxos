@@ -71,7 +71,7 @@ public class Learner {
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
             learner.log = new String[Integer.MAX_VALUE];
-            int  i =0;
+            int i =0;
             for(JsonElement ob: parsed){
                 String s = ob.getAsString();
                 learner.log[i] = s;
@@ -147,6 +147,7 @@ public class Learner {
     public void viewLog(){
         for(int i =0;i<5;i++){
             System.out.println(learner.log[i]);
+
         }
     }
 
