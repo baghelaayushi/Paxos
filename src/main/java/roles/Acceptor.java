@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class Acceptor {
@@ -51,12 +52,12 @@ public class Acceptor {
     }
 
 
-    /*static void saveState(){
+    static void saveState(){
 
         try(FileWriter fw = new FileWriter("current_log.json")){
             Gson gson = new Gson();
             JsonArray arr = new JsonArray();
-            for(Map.Entry<Integer,List<Integer>> entry: accEntry.entrySet()){
+            for(Map.Entry<Integer,AcceptedRequest> entry: instance.acceptedEntries.entrySet()){
                 JsonObject temp = new JsonObject();
                 JsonArray tempArray = new JsonArray();
                 String ob = gson.toJson(entry.getValue());
@@ -71,30 +72,26 @@ public class Acceptor {
         }
 
 
-    }*/
-    /*static void getState(){
+    }
+    public static void getState(){
         try {
             //convert the json string back to object
             BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            accEntry = new HashMap<>();
+            instance.acceptedEntries = new HashMap<>();
             for(JsonElement ob: parsed){
                 JsonObject temp = ob.getAsJsonObject();
                 Set<String> id = temp.keySet();
-                String s = "";
-                for(String myId:id)
-                    s = myId;
+                String myId = "";
+                for(String s:id)
+                    myId = s;
 
-                JsonArray array = temp.getAsJsonArray(s);
+                JsonArray array = temp.getAsJsonArray(myId);
                 JsonElement obj = array.get(0);
-                List<String> cl = gson.fromJson(obj.getAsString(),List.class);
-                List<Integer> values = new ArrayList<>();
-                values.add(Integer.parseInt(cl.get(0)));
-                values.add(Integer.parseInt(cl.get(1)));
-                values.add(Integer.parseInt(cl.get(2)));
-                accEntry.put(Integer.parseInt(s),values);
+                AcceptedRequest request = gson.fromJson(obj.getAsString(),AcceptedRequest.class);
+                instance.acceptedEntries.put(Integer.parseInt(myId),request);
 
             }
 
@@ -102,7 +99,7 @@ public class Acceptor {
             e.printStackTrace();
         }
 
-    }*/
+    }
 
     private void sendCommitToLearner(int sender, int logPosition){
         Learner instance = Learner.getInstance();
@@ -169,6 +166,7 @@ public class Acceptor {
 //            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
+            saveState();
         }
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
 
@@ -209,6 +207,7 @@ public class Acceptor {
 //            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
+            saveState();
         }
 
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
@@ -237,6 +236,7 @@ public class Acceptor {
                 acceptedRequest.setAccNum(Integer.parseInt(accNum));
                 acceptedRequest.setAccVal(accValue);
                 acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
+                saveState();
 
                 ackmessage.setAccNum(accNum);
                 ackmessage.setAccValue(accValue);

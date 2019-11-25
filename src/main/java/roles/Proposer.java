@@ -46,6 +46,7 @@ public class Proposer {
         return proposalNumber;
     }
 
+
     private void sendMessages(int stage,int position){
 
         String proposalNumber = null;

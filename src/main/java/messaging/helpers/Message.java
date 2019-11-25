@@ -7,6 +7,7 @@ public class Message implements Serializable {
     int messageType;
     int from;
     int logPosition;
+    String logValue;
 
     public int getFrom() {
         return from;
@@ -19,6 +20,10 @@ public class Message implements Serializable {
     public void setLogPosition(int logPosition) {this.logPosition = logPosition;}
 
     public int getLogPosition(){return logPosition;}
+
+    public void setlogValue(String logValue){ this.logValue = logValue;}
+
+    public String getLogValue(){ return logValue;}
 
     public String getTo() {
         return to;

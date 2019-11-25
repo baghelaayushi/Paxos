@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import messaging.MessagingClient;
 import messaging.helpers.*;
 
 import java.util.HashMap;
@@ -47,6 +48,36 @@ public class Learner {
         return learner;
     }
 
+    static void saveDictionary(int checkpoint){
+        try(FileWriter fw = new FileWriter("saved_dictionary.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<String,String> res: reservationMap.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(res.getValue());
+                tempArray.add(ob);
+                temp.add(res.getKey(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try(FileWriter fw = new FileWriter("saved_checkpoint.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            arr.add(checkpoint);
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     static void saveState(){
 
         try(FileWriter fw = new FileWriter("saved_log.json")){
@@ -63,14 +94,14 @@ public class Learner {
 
 
     }
-    static void getState(){
+    public static void getState(){
         try {
             //convert the json string back to object
             BufferedReader backup = new BufferedReader(new FileReader("saved_log.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            learner.log = new String[Integer.MAX_VALUE];
+            learner.log = new String[1000];
             int i =0;
             for(JsonElement ob: parsed){
                 String s = ob.getAsString();
@@ -81,7 +112,103 @@ public class Learner {
             e.printStackTrace();
         }
 
+        try {
+            //convert the json string back to object
+            BufferedReader backup = new BufferedReader(new FileReader("saved_dictionary.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            reservationMap = new TreeMap<>();
+            int i =0;
+            for(JsonElement ob: parsed){
+                JsonObject temp = ob.getAsJsonObject();
+                Set<String> id = temp.keySet();
+                String myId = "";
+                for(String s:id)
+                    myId = s;
+
+                JsonArray array = temp.getAsJsonArray(myId);
+                JsonElement obj = array.get(0);
+                reservationMap.put(myId,obj.getAsString());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
+    public void sendLogValue(Message message){
+        int sender = message.getFrom();
+        try {
+            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
+            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
+            MessagingClient mClient = new MessagingClient(destinationAddress, port);
+            Message logValue = new Message();
+            logValue.setLogPosition(message.getLogPosition());
+            logValue.setMessageType(10);
+            logValue.setlogValue(log[message.getLogPosition()]);
+            mClient.send(logValue);
+            mClient.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public void learnValue(Message message){
+        if(message.getLogValue()!=null){
+            log[message.getLogPosition()] = message.getLogValue();
+        }
+        logCheck[message.getLogPosition()] = true;
+        updateDictionary(message.getLogValue());
+        saveState();
+    }
+
+    private void sendMessages(int logPosition){
+
+
+        for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
+
+            try {
+                String destinationAddress = client.getValue().getIpAddress();
+                int port = client.getValue().getRandomPort();
+
+                Message message = new Message();
+                message.setFrom(site.getSiteNumber());
+                message.setMessageType(9);
+                message.setLogPosition(logPosition);
+
+                //to send a request to learn message to all processes
+                if(client.getValue().getSiteNumber() != site.getSiteNumber()){
+                        MessagingClient mClient = new MessagingClient(destinationAddress, port);
+
+                        mClient.send(message);
+                        mClient.close();
+
+                }
+
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void learnLogs(int startIndex, int endIndex){
+        if(endIndex == 0)
+            return;
+
+        for(int i = startIndex;i<endIndex;i++){
+            if(log[i] == null)
+                sendMessages(i);
+        }
+
+
+    }
+
 
     public void learner(LearnMessage message){
 
@@ -91,7 +218,6 @@ public class Learner {
         int requestedLogPosition = message.getLogPosition();
 
         int siteQuorum = siteHashMap.size()/2+1;
-
 
         //Have we received anything for this log position?
         if(logMap.containsKey(requestedLogPosition)){
@@ -105,8 +231,12 @@ public class Learner {
 
                     log[requestedLogPosition] = accVal;
                     logCheck[requestedLogPosition] = true;
+                    if((requestedLogPosition+1)%5 == 0){
+                      learnLogs(requestedLogPosition-5,requestedLogPosition);
+                    }
                     updateDictionary(accVal);
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
+                    saveState();
 
                 }
 
