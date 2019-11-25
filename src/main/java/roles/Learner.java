@@ -106,10 +106,11 @@ public class Learner {
 
                 if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
 
-                    System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
                     log[requestedLogPosition] = accVal;
                     logCheck.add(requestedLogPosition,true);
                     updateDictionary(accVal);
+                    System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
+
                 }
 
                 HashMap<String,Integer> temp = logMap.get(requestedLogPosition);

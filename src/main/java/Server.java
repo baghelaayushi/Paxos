@@ -36,7 +36,7 @@ public class Server {
 
     public static void bootstrapProject(String selfIdentifier){
 
-        System.out.println("Starting as " + selfIdentifier);
+//        System.out.println("Starting as " + selfIdentifier);
         try {
             processHosts(selfIdentifier);
             initialize();
