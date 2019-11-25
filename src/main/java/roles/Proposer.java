@@ -21,8 +21,9 @@ public class Proposer {
     HashMap<String, Site> siteHashMap = null;
     String currentValue = null;
     HashSet<Integer> approvalFrom = new HashSet<Integer>();
+    static HashSet<Integer> valueLearned = new HashSet<Integer>();
     boolean acceptSent = false;
-
+    static Boolean wonLastRound = false;
     int maxRecvdAckNum = -1;
 
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
@@ -70,12 +71,12 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
-//                  System.out.println("Sending messages" + proposalNumber);
                     PrepareMessage message = new PrepareMessage(proposalNumber, position, site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         approvalFrom.add(site.getSiteNumber());
                         acceptorInstance.processPrepareRequest(message);
+                        valueLearned.add(site.getSiteNumber());
                     }else {
                         MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
@@ -114,6 +115,7 @@ public class Proposer {
         Learner learner = Learner.getInstance();
 
         approvalFrom = new HashSet<>();
+        valueLearned = new HashSet<>();
 
         int position = 0;
         for(String s: learner.log){
@@ -123,8 +125,6 @@ public class Proposer {
             position++;
         }
 
-//        System.out.println("Proposing for Log Position" + position);
-
         acceptSent = false;
 
         if(method.equals("reserve"))
@@ -133,7 +133,13 @@ public class Proposer {
             System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
 
 
-        sendMessages(1,position);
+        if(!wonLastRound)
+            sendMessages(1,position);
+        else{
+            System.err.println("% executing an optimized paxos");
+            getProposalNumber();
+            sendMessages(2, position);
+        }
 
         try{
             future.get(3, TimeUnit.SECONDS);
@@ -142,29 +148,10 @@ public class Proposer {
             future.cancel(true);
         }
 
-        try {
-            future = executor.submit(new Tasks());
-            future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend(position);
-        }catch (Exception e1){
-           future.cancel(true);
-        }
 
-        try {
-            future = executor.submit(new Tasks());
-            future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend(position);
-        }catch (Exception e1){
-            future.cancel(true);
-        }
-
-        try {
-            future = executor.submit(new Tasks());
-            future.get(3, TimeUnit.SECONDS);
-            checkSetAndAttemptSend(position);
-        }catch (Exception e1){
-            future.cancel(true);
-        }
+        reAttempt(executor, future, position);
+        reAttempt(executor, future, position);
+        reAttempt(executor, future, position);
 
         currentValue = reservation;
 
@@ -173,19 +160,56 @@ public class Proposer {
 
     }
 
+    private void reAttempt(ExecutorService executor, Future<String> future, int position) {
+        try {
+            future = executor.submit(new Tasks());
+            future.get(3, TimeUnit.SECONDS);
+            checkSetAndAttemptSend(position);
+        }catch (Exception e1){
+            future.cancel(true);
+        }
+    }
+
     private void checkSetAndAttemptSend(int position) throws Exception {
-        if (approvalFrom.size() <= siteHashMap.size() / 2) {
-            approvalFrom = new HashSet<>();
-            sendMessages(1,position);
-        } else {
-            throw new Exception();
+
+        if (!wonLastRound){
+            if (approvalFrom.size() <= siteHashMap.size() / 2) {
+                approvalFrom = new HashSet<>();
+                sendMessages(1, position);
+            } else {
+                throw new Exception();
+            }
+        } else{
+            if (valueLearned.size() <= siteHashMap.size() / 2) {
+                valueLearned = new HashSet<>();
+                sendMessages(2, position);
+            } else {
+                throw new Exception();
+            }
+        }
+
+
+
+    }
+
+    public void learnAcceptanceAcks(Message ack) {
+
+        wonLastRound = false;
+        PrepareAck message = (PrepareAck) ack;
+
+        System.err.println("% value-accepted - received ack("+message.getAccNum()+","+message.getAccValue()+"" +
+                ") from site " + message.getFrom());
+
+        valueLearned.add(message.getFrom());
+
+        if (valueLearned.size() > (siteHashMap.size() / 2)) {
+            System.out.println("I have won");
+            wonLastRound = true;
         }
     }
 
     public void processProposalAcks(Message ack, boolean wasSupported){
 
-
-//        System.out.println("Received msg from " + ack.getFrom() + " for position " + ack.getLogPosition());
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
            System.out.println("The reservation was rejected");

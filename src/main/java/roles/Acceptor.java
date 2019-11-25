@@ -16,6 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 
@@ -197,8 +198,6 @@ public class Acceptor {
 
     public void processAcceptRequest(AcceptMessage message) {
 
-        Proposer proposer = Proposer.getInstance(null,null,null);
-
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
@@ -206,20 +205,21 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
 
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
-//            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
         }
 
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
+            ackmessage.setFrom(site.getSiteNumber());
 
             if(sender == site.getSiteNumber()){
-                //TODO for nack
+
             }else {
                 sendAckMessages(sender, ackmessage);
             }
@@ -242,13 +242,20 @@ public class Acceptor {
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
+                ackmessage.setFrom(site.getSiteNumber());
                 ackmessage.setLogPosition(message.getLogPosition());
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
 
-//                    System.out.println("sending to myself");
-
+                    System.err.println("% self- received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
+                            ") from site " + ackmessage.getFrom());
+                    Proposer.valueLearned.add(sender);
                 }else {
+                    System.err.println("% Resetting my own last rounds");
+                    Proposer.wonLastRound = false;
+                    Proposer.valueLearned = new HashSet<>();
+                    System.err.println("% received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
+                            ") from site " + ackmessage.getFrom());
                     sendAckMessages(sender, ackmessage);
                 }
             }
@@ -257,7 +264,6 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-//            System.out.println("Sending message to learner");
             sendCommitToLearner(sender,message.getLogPosition());
         }
 
