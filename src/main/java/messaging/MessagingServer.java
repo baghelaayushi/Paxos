@@ -64,6 +64,8 @@ public class MessagingServer {
                         Proposer.getInstance(null,null,null).processProposalAcks(message,false);
                         //TODO: Go to proposer
                         break;
+                    case 6:
+                        Proposer.getInstance(null,null,null).learnAcceptanceAcks(message);
                     case 7:
 //                        System.out.println("Recieved nack for accept message");
                         //TODO: Send to proposer

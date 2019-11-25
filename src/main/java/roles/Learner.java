@@ -3,10 +3,7 @@ package roles;
 import com.google.gson.*;
 import helpers.Site;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 import messaging.MessagingClient;
@@ -97,15 +94,22 @@ public class Learner {
     public static void getState(){
         try {
             //convert the json string back to object
+            File f = new File("saved_log.json");
+            if(!f.exists())
+                return;
+
             BufferedReader backup = new BufferedReader(new FileReader("saved_log.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            learner.log = new String[1000];
-            int i =0;
-            for(JsonElement ob: parsed){
-                String s = ob.getAsString();
-                learner.log[i] = s;
+            if(!parsed.isJsonNull()) {
+                int i = 0;
+                for (JsonElement ob : parsed) {
+                    //System.out.println(ob);
+                    if(ob != null)
+                        learner.log[i] = ob.toString();
+                    i++;
+                }
             }
 
         } catch (IOException e) {
@@ -114,22 +118,26 @@ public class Learner {
 
         try {
             //convert the json string back to object
+            File f = new File("saved_dictionary.json");
+            if(!f.exists())
+                return;
             BufferedReader backup = new BufferedReader(new FileReader("saved_dictionary.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            reservationMap = new TreeMap<>();
             int i =0;
-            for(JsonElement ob: parsed){
-                JsonObject temp = ob.getAsJsonObject();
-                Set<String> id = temp.keySet();
-                String myId = "";
-                for(String s:id)
-                    myId = s;
+            if(!parsed.isJsonNull()) {
+                for (JsonElement ob : parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
 
-                JsonArray array = temp.getAsJsonArray(myId);
-                JsonElement obj = array.get(0);
-                reservationMap.put(myId,obj.getAsString());
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    reservationMap.put(myId, obj.getAsString());
+                }
             }
 
         } catch (IOException e) {
@@ -227,16 +235,19 @@ public class Learner {
 
                 int count = logMap.get(requestedLogPosition).get(accNum + '-' + accVal);
 
-                if(count+1>=siteQuorum && !logCheck[requestedLogPosition]){
+                if(count+1>=siteQuorum && log[requestedLogPosition]==null){
 
                     log[requestedLogPosition] = accVal;
-                    logCheck[requestedLogPosition] = true;
+                    //logCheck[requestedLogPosition] = true;
                     if((requestedLogPosition+1)%5 == 0){
                       learnLogs(requestedLogPosition-5,requestedLogPosition);
                     }
                     updateDictionary(accVal);
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
+
                     saveState();
+                    Proposer.valueLearned = new HashSet<>();
+
 
                 }
 

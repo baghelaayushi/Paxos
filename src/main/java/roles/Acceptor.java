@@ -10,12 +10,10 @@ import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,19 +77,20 @@ public class Acceptor {
             BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            if(!parsed.isJsonNull()){
             Gson gson = new Gson();
-            instance.acceptedEntries = new HashMap<>();
-            for(JsonElement ob: parsed){
+            for(JsonElement ob: parsed) {
                 JsonObject temp = ob.getAsJsonObject();
                 Set<String> id = temp.keySet();
                 String myId = "";
-                for(String s:id)
+                for (String s : id)
                     myId = s;
 
                 JsonArray array = temp.getAsJsonArray(myId);
                 JsonElement obj = array.get(0);
-                AcceptedRequest request = gson.fromJson(obj.getAsString(),AcceptedRequest.class);
-                instance.acceptedEntries.put(Integer.parseInt(myId),request);
+                AcceptedRequest request = gson.fromJson(obj.getAsString(), AcceptedRequest.class);
+                instance.acceptedEntries.put(Integer.parseInt(myId), request);
+            }
 
             }
 
@@ -195,8 +194,6 @@ public class Acceptor {
 
     public void processAcceptRequest(AcceptMessage message) {
 
-        Proposer proposer = Proposer.getInstance(null,null,null);
-
         int sender = message.getFrom();
         String proposalNumber[] = message.getCompleteProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
@@ -204,21 +201,22 @@ public class Acceptor {
         PrepareAck ackmessage = new PrepareAck();
 
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
-//            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
         }
 
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
+
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
+            ackmessage.setFrom(site.getSiteNumber());
 
             if(sender == site.getSiteNumber()){
-                //TODO for nack
+
             }else {
                 sendAckMessages(sender, ackmessage);
             }
@@ -242,13 +240,20 @@ public class Acceptor {
                 ackmessage.setAccValue(accValue);
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
+                ackmessage.setFrom(site.getSiteNumber());
                 ackmessage.setLogPosition(message.getLogPosition());
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
 
-//                    System.out.println("sending to myself");
-
+                    System.err.println("% self- received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
+                            ") from site " + ackmessage.getFrom());
+                    Proposer.valueLearned.add(sender);
                 }else {
+                    System.err.println("% Resetting my own last rounds");
+                    Proposer.wonLastRound = false;
+                    Proposer.valueLearned = new HashSet<>();
+                    System.err.println("% received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
+                            ") from site " + ackmessage.getFrom());
                     sendAckMessages(sender, ackmessage);
                 }
             }
@@ -257,7 +262,6 @@ public class Acceptor {
             }
 
             //sending acceptance to learners
-//            System.out.println("Sending message to learner");
             sendCommitToLearner(sender,message.getLogPosition());
         }
 

@@ -1,7 +1,4 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import helpers.Site;
 import messaging.MessagingServer;
 import roles.Acceptor;
@@ -59,6 +56,7 @@ public class Server {
         for (Map.Entry<String, JsonElement> host : hostsObject.entrySet()){
             JsonObject siteInfo = host.getValue().getAsJsonObject();
             siteIDMap.put(site_number,host.getKey());
+//            siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
             Site site = new Site(siteInfo.get("ip_address").getAsString(),
                     siteInfo.get("udp_start_port").getAsString(),
                     siteInfo.get("udp_end_port").getAsString(),site_number++);
@@ -81,13 +79,13 @@ public class Server {
 //        System.out.println("Starting local server at "+ mySite.getRandomPort());
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
-        Acceptor.getState();
-        Learner.getState();
-
 
         new Thread(()-> proposer = Proposer.getInstance(mySite,log, siteHashMap)).start();
         new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();
         new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();
+
+        Acceptor.getState();
+        Learner.getState();
 
 
 
