@@ -115,10 +115,10 @@ public class Server {
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
-                    proposer.initiateProposal(inp,"reserve");
+                    proposer.initiateProposal(inp,"reserve",0);
                     break;
                 case "cancel":
-                    proposer.initiateProposal(inp,"cancel");
+                    proposer.initiateProposal(inp,"cancel",0);
                     break;
                 case "view":
                     learner.viewDictionary();

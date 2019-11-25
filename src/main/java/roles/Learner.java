@@ -146,73 +146,28 @@ public class Learner {
 
     }
 
-    public void sendLogValue(Message message){
-        int sender = message.getFrom();
-        try {
-            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
-            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-            MessagingClient mClient = new MessagingClient(destinationAddress, port);
-            Message logValue = new Message();
-            logValue.setLogPosition(message.getLogPosition());
-            logValue.setMessageType(10);
-            logValue.setlogValue(log[message.getLogPosition()]);
-            mClient.send(logValue);
-            mClient.close();
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-
-    }
-
-    public void learnValue(Message message){
-        if(message.getLogValue()!=null){
-            log[message.getLogPosition()] = message.getLogValue();
-        }
-        logCheck[message.getLogPosition()] = true;
-        updateDictionary(message.getLogValue());
-        saveState();
-    }
-
-    private void sendMessages(int logPosition){
 
 
-        for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
-
-            try {
-                String destinationAddress = client.getValue().getIpAddress();
-                int port = client.getValue().getRandomPort();
-
-                Message message = new Message();
-                message.setFrom(site.getSiteNumber());
-                message.setMessageType(9);
-                message.setLogPosition(logPosition);
-
-                //to send a request to learn message to all processes
-                if(client.getValue().getSiteNumber() != site.getSiteNumber()){
-                        MessagingClient mClient = new MessagingClient(destinationAddress, port);
-
-                        mClient.send(message);
-                        mClient.close();
-
-                }
-
-            }
-            catch (IOException e){
-                e.printStackTrace();
-            }
-        }
-
-    }
 
     private void learnLogs(int startIndex, int endIndex){
         if(endIndex == 0)
             return;
+        Queue<Integer> indexes = new LinkedList<>();
 
-        for(int i = startIndex;i<endIndex;i++){
+        System.err.println("filling holes for position "+ startIndex + "  " + endIndex);
+        int i = startIndex;
+
+        while(i<endIndex){
             if(log[i] == null)
-                sendMessages(i);
+                indexes.add(i);
+            i++;
+
         }
+        while(!indexes.isEmpty()){
+            Proposer proposer = Proposer.getInstance(null,null,null);
+            proposer.initiateProposal("res A 3,4","",indexes.remove());
+        }
+        saveDictionary(endIndex);
 
 
     }
@@ -240,7 +195,7 @@ public class Learner {
                     log[requestedLogPosition] = accVal;
                     //logCheck[requestedLogPosition] = true;
                     if((requestedLogPosition+1)%5 == 0){
-                      learnLogs(requestedLogPosition-5,requestedLogPosition);
+                      learnLogs(requestedLogPosition-4,requestedLogPosition);
                     }
                     updateDictionary(accVal);
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);

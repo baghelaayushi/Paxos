@@ -108,7 +108,7 @@ public class Proposer {
     }
 
 
-    public void initiateProposal(String reservation, String method){
+    public void initiateProposal(String reservation, String method, int position){
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
@@ -118,19 +118,20 @@ public class Proposer {
         approvalFrom = new HashSet<>();
         valueLearned = new HashSet<>();
 
-        int position = 0;
-        for(String s: learner.log){
-            if(s == null){
-                break;
+        if(position ==0) {
+            for (String s : learner.log) {
+                if (s == null) {
+                    break;
+                }
+                position++;
             }
-            position++;
         }
 
         acceptSent = false;
 
         if(method.equals("reserve"))
             System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");
-        else
+        else if(method.equals("cancel"))
             System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
 
 

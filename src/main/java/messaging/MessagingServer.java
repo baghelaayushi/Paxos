@@ -73,12 +73,6 @@ public class MessagingServer {
                     case 8:
                         learner.learner((LearnMessage) message);
                         break;
-                    case 9:
-                        learner.sendLogValue(message);
-                        break;
-                    case 10:
-                        learner.learnValue(message);
-                        break;
                 }
 
             } catch (Exception e) {
