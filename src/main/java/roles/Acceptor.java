@@ -73,6 +73,9 @@ public class Acceptor {
     }
     public static void getState(){
         try {
+            File f = new File("current_log.json");
+            if(!f.exists())
+                return;
             //convert the json string back to object
             BufferedReader backup = new BufferedReader(new FileReader("current_log.json"));
             JsonParser parser = new JsonParser();
