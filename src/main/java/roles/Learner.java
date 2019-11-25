@@ -163,11 +163,11 @@ public class Learner {
             i++;
 
         }
-        while(!indexes.isEmpty()){
+        /*while(!indexes.isEmpty()){
             Proposer proposer = Proposer.getInstance(null,null,null);
             proposer.initiateProposal("res A 3,4","",indexes.remove());
-        }
-        saveDictionary(endIndex);
+        }*/
+        //saveDictionary(endIndex);
 
 
     }
