@@ -123,7 +123,7 @@ public class Proposer {
             position++;
         }
 
-        System.out.println("Proposing for Log Position" + position);
+//        System.out.println("Proposing for Log Position" + position);
 
         acceptSent = false;
 
