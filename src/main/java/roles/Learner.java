@@ -110,6 +110,8 @@ public class Learner {
                     logCheck.add(requestedLogPosition,true);
                     updateDictionary(accVal);
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
+//                    Proposer.valueLearned = new HashSet<>();
+
 
                 }
 
