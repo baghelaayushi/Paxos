@@ -317,21 +317,21 @@ public class Learner {
         if(log[lowerBound] != null){
             start = lowerBound;
         }
-        for (int i = start; i < currentPosition; i++){
+        for (int i = start; i <= currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
+                Proposer.valueLearned = new HashSet<>();
+                Proposer.approvalFrom = new HashSet<>();
+                Proposer.wonLastRound = false;
                 Proposer.getInstance(null, null, null)
                         .initiateProposal("reserve test -1,-1","",i);
                 Proposer.wonLastRound = false;
-                Proposer.valueLearned = new HashSet<>();
-                Proposer.approvalFrom = new HashSet<>();
+
                 System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
 
             }
         }
-
-        saveDictionary(currentPosition);
 
     }
 
@@ -360,6 +360,8 @@ public class Learner {
                     if((requestedLogPosition+1)%5 == 0){
                         System.err.println("% checkpointing at log position" + requestedLogPosition);
                         new Thread(()->learnLogs(requestedLogPosition)).start();
+                        saveDictionary(requestedLogPosition);
+
                     }
                     new Thread(()-> updateDictionary(accVal)).start();
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);

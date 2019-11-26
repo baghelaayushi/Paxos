@@ -24,7 +24,7 @@ public class Proposer {
     static HashSet<Integer> valueLearned = new HashSet<Integer>();
     boolean acceptSent = false;
     static Boolean wonLastRound = false;
-    int maxRecvdAckNum = -1;
+    static int maxRecvdAckNum = -1;
 
     int[] proposalNumbers = new int[1000];
     String[] proposalCombinations = new String[1000];
@@ -133,7 +133,7 @@ public class Proposer {
 
         approvalFrom = new HashSet<>();
         valueLearned = new HashSet<>();
-
+        maxRecvdAckNum = -1;
         if(position ==0) {
             for (String s : learner.log) {
                 if (s == null) {
@@ -164,13 +164,13 @@ public class Proposer {
         }
 
         try{
-            future.get(3, TimeUnit.SECONDS);
+            future.get(99, TimeUnit.MILLISECONDS);
         }catch (Exception e){
 
             future.cancel(true);
         }
 
-
+        System.err.println("% Is there still a null?");
         if(Learner.getLog()[position] == null)
             reAttempt(executor, future, position);
         if(Learner.getLog()[position] == null)
@@ -186,7 +186,8 @@ public class Proposer {
     private void reAttempt(ExecutorService executor, Future<String> future, int position) {
         try {
             future = executor.submit(new Tasks());
-            future.get(3, TimeUnit.SECONDS);
+            future.get(99, TimeUnit.MILLISECONDS);
+            System.err.println("% Reattempting");
             System.err.println(Learner.getLog()[position]);
             checkSetAndAttemptSend(position);
         }catch (Exception e1){
@@ -197,6 +198,7 @@ public class Proposer {
     private void checkSetAndAttemptSend(int position) throws Exception {
 
         if (!wonLastRound){
+            System.err.println("%checkAndSet");
             if (approvalFrom.size() <= siteHashMap.size() / 2) {
                 approvalFrom = new HashSet<>();
                 sendMessages(1, position);
@@ -258,31 +260,40 @@ public class Proposer {
             System.err.println("% received promise("+prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+"" +
                     ") from site " + prepareMessage.getFrom());
 
-
-
             if(prepareMessage.getAccValue() != null){
 
+                System.err.println("Received message is not null" + prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+" maxRecv" +
+                        maxRecvdAckNum);
+                //Is this my first proposal?
                 if(maxRecvdAckNum != -1){
                     if(Integer.parseInt(proposed) >= maxRecvdAckNum){
                         maxRecvdAckNum = Integer.parseInt(proposed);
-//                        currentValue = prepareMessage.getAccValue();
+                        System.err.println("Updating from "+
+                                proposalValues[prepareMessage.getLogPosition()]+
+                                "to" +
+                                prepareMessage.getAccValue());
                         proposalValues[prepareMessage.getLogPosition()] = prepareMessage.getAccValue();
 
                         //Reset approvals
 
                     }
                 }else{
+                    //Yes it is
                     maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
-//                    currentValue = prepareMessage.getAccValue();
+                    System.err.println("Updating from "+
+                            proposalValues[prepareMessage.getLogPosition()]+
+                            "to" +
+                            prepareMessage.getAccValue());
                     proposalValues[prepareMessage.getLogPosition()] = prepareMessage.getAccValue();
 
                 }
             }
 
+
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
-                System.err.println("% received accept messages from a majority");
-                if(prepareMessage.getFrom() != site.getSiteNumber())
+                System.err.println("% received accept messages from a majority with" + proposalValues[ack.getLogPosition()]);
+//                if(prepareMessage.getFrom() != site.getSiteNumber())
                     sendMessages(2,ack.getLogPosition());
 
                 acceptSent = true;
