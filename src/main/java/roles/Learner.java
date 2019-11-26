@@ -233,6 +233,33 @@ public class Learner {
         int checkpoint = getCheckPoint();
     }
 
+    private void learnLogsRecovery(int currentPosition){
+
+        //Run the synod algorithm for all positions
+        int start = 0;
+        int offSet = currentPosition % 5;
+        int lowerBound = currentPosition - offSet;
+        if(log[lowerBound] != null){
+            start = lowerBound;
+        }
+        for (int i = start; i < currentPosition; i++){
+            if(log[i] == null){
+                //There's a hole, run synod
+                System.err.println("% Filling a hole at"+ i);
+                Proposer.getInstance(null, null, null)
+                        .initiateProposal("reserve test -1,-1","",i);
+                Proposer.wonLastRound = false;
+                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
+
+            }
+        }
+
+        saveDictionary(currentPosition);
+
+
+
+    }
+
 
     private void learnLogs(int currentPosition){
 
@@ -255,7 +282,7 @@ public class Learner {
             }
         }
 
-        //saveDictionary(currentPosition);
+        saveDictionary(currentPosition);
 
 
 
