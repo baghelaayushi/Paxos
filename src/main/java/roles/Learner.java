@@ -10,7 +10,6 @@ import messaging.MessagingClient;
 import messaging.helpers.*;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class Learner {
     static Learner learner = null;
@@ -103,6 +102,26 @@ public class Learner {
 
     }
 
+    public void lastLogPointer(Message message){
+
+        int position = -1;
+        for (int i = log.length - 1; i >=0 ; i--){
+            if(log[i] != null){
+                position = i;
+            }
+        }
+
+        try{
+            Site messageFrom = siteHashMap.get(message.getFrom());
+            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), messageFrom.getRandomPort());
+            client.send(new LogPositionMessage(position, site.getSiteNumber()));
+            client.close();
+        }catch (Exception e){
+            System.err.println(e.getStackTrace());
+        }
+
+    }
+
     static void saveState(){
 
         try(FileWriter fw = new FileWriter("saved_log.json")){
@@ -119,6 +138,8 @@ public class Learner {
 
 
     }
+
+
     public static void getLogState(){
         try {
             //convert the json string back to object
@@ -227,6 +248,7 @@ public class Learner {
     }
 
     public static void getState(){
+
         getLog();
         getDictionary();
         getStoredFlights();
@@ -255,11 +277,7 @@ public class Learner {
             }
         }
 
-        //saveDictionary(currentPosition);
-
-
-
-
+        saveDictionary(currentPosition);
 
     }
 
