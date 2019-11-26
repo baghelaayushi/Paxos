@@ -87,6 +87,7 @@ public class Server {
 
         Acceptor.getState();
         Learner.getState();
+        Proposer.getState();
 
 
 
@@ -133,6 +134,7 @@ public class Server {
                     File currentDictionary = new File("./saved_dictionary.json");
                     File checkpoint = new File("./saved_checkpoint.json");
                     File savedFlight = new File("./saved_flight.json");
+                    File saveMaxProposed = new File("./saved_maxProposal.json");
 
                     try{
                         savedLog.delete();
@@ -140,6 +142,7 @@ public class Server {
                         currentDictionary.delete();
                         checkpoint.delete();
                         savedFlight.delete();
+                        saveMaxProposed.delete();
                     }catch (Exception e){
 
                     }

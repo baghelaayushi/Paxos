@@ -1,10 +1,14 @@
 package roles;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import messaging.helpers.*;
 import helpers.Site;
 import messaging.MessagingClient;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +37,7 @@ public class Proposer {
         //TODO:System could have crashed, check that.
         this.site = siteInformation;
         this.siteHashMap = siteMap;
+        proposalNumbers = new int[1000];
     }
     public static Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
         if (instance == null){
@@ -45,9 +50,50 @@ public class Proposer {
 
 //        maxProposalNumber++;
         proposalNumbers[logPosition]++;
+        saveState();
         String proposalNumber = proposalNumbers[logPosition] +"-"+site.getSiteNumber();
         latestProposalCombination = proposalNumber;
         return proposalNumber;
+    }
+
+    public static void saveState(){
+        try(FileWriter fw = new FileWriter("saved_maxProposal.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(int s:instance.proposalNumbers){
+                arr.add(s);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void getState(){
+        try {
+            //convert the json string back to object
+            File f = new File("saved_maxProposal.json");
+            if(!f.exists())
+                return;
+
+            BufferedReader backup = new BufferedReader(new FileReader("saved_maxProposal.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            if(!parsed.isJsonNull()) {
+                int i = 0;
+                for (JsonElement ob : parsed) {
+                    //System.out.println(ob);
+                    if(ob != null)
+                        instance.proposalNumbers[i] = Integer.parseInt(ob.toString());
+                    i++;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -237,6 +283,7 @@ public class Proposer {
                     "for position "+ message.getLogPosition());
 
             proposalNumbers[message.getLogPosition()] += Integer.parseInt(message.getAccNum());
+            saveState();
             initiateProposal(ack.getOriginalValue(),"",1);
 //
 //           System.out.println("The reservation was rejected");
