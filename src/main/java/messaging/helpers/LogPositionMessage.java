@@ -3,6 +3,7 @@ package messaging.helpers;
 public class LogPositionMessage extends Message {
 
 
+
     @Override
     public int getLogPosition() {
         return logPosition;
@@ -16,6 +17,7 @@ public class LogPositionMessage extends Message {
     int logPosition = -1;
 
     public LogPositionMessage(int logPosition, int from){
+        super.setMessageType(10);
         super.setFrom(from);
         this.logPosition = logPosition;
     }

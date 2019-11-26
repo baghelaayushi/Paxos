@@ -110,6 +110,7 @@ public class Learner {
         for (int i = log.length - 1; i >=0 ; i--){
             if(log[i] != null){
                 position = i;
+                break;
             }
         }
 
