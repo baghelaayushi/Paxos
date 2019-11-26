@@ -186,9 +186,6 @@ public class Acceptor {
 
         ackmessage.setMessageType(3);
 
-        System.err.println("%%%%%%%%%%%%%%%%%%%%%%");
-        System.err.println("From "+ site.getSiteNumber());
-        System.err.println("From message  "+ message.getFrom());
 
         if(sender == site.getSiteNumber()){
             proposer.processProposalAcks(ackmessage,true);
