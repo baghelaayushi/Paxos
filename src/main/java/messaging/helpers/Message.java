@@ -7,7 +7,30 @@ public class Message implements Serializable {
     int messageType;
     int from;
     int logPosition;
+    String originalValue;
+    String method;
+
     String logValue;
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue(String originalValue) {
+        this.originalValue = originalValue;
+    }
+
+    public void setLogValue(String logValue) {
+        this.logValue = logValue;
+    }
 
     public int getFrom() {
         return from;

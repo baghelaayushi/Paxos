@@ -165,7 +165,6 @@ public class Acceptor {
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
 //        System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
-//            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
@@ -185,6 +184,7 @@ public class Acceptor {
 
         ackmessage.setMessageType(3);
 
+        System.err.println("% for the request, returning " + ackmessage.getAccValue() + ackmessage.getAccNum());
         if(sender == site.getSiteNumber()){
             proposer.processProposalAcks(ackmessage,true);
         }
@@ -214,6 +214,7 @@ public class Acceptor {
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
+            ackmessage.setOriginalValue(message.getProposedValue());
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             ackmessage.setFrom(site.getSiteNumber());
@@ -244,6 +245,7 @@ public class Acceptor {
                 ackmessage.setAck(true);
                 ackmessage.setMessageType(6);
                 ackmessage.setFrom(site.getSiteNumber());
+                ackmessage.setOriginalValue(message.getProposedValue());
                 ackmessage.setLogPosition(message.getLogPosition());
                 //sending acceptance message to proposer
                 if(sender == site.getSiteNumber()){
