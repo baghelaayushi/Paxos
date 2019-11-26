@@ -193,8 +193,10 @@ public class Proposer {
             System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
 
 
-        if(!wonLastRound)
-            sendMessages(1,position);
+        if(!wonLastRound) {
+            System.err.println("sending for position: " + position);
+            sendMessages(1, position);
+        }
         else{
             System.err.println("% executing an optimized paxos");
             getProposalNumber(position);

@@ -205,11 +205,11 @@ public class Learner {
                 return;
             BufferedReader backup = new BufferedReader(new FileReader("saved_dictionary.json"));
             JsonParser parser = new JsonParser();
-            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            JsonElement parsed = parser.parse(backup);
             Gson gson = new Gson();
             int i =0;
             if(!parsed.isJsonNull()) {
-                for (JsonElement ob : parsed) {
+                for (JsonElement ob : parsed.getAsJsonArray()) {
                     JsonObject temp = ob.getAsJsonObject();
                     Set<String> id = temp.keySet();
                     String myId = "";
