@@ -200,7 +200,7 @@ public class Learner {
 
                     log[requestedLogPosition] = accVal;
                     //logCheck[requestedLogPosition] = true;
-                    if((requestedLogPosition+1)%3 == 0){
+                    if((requestedLogPosition+1)%5 == 0){
                         System.err.println("% checkpointing at log position" + requestedLogPosition);
                         new Thread(()->learnLogs(requestedLogPosition)).start();
                     }
