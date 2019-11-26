@@ -292,12 +292,23 @@ public class Proposer {
             //TODO: Add to the set
             PrepareAck prepareMessage = (PrepareAck)ack;
 
+            System.err.println("%Approval from adding:"+prepareMessage.getFrom() + " " + prepareMessage.getAccNum()
+            +" " + prepareMessage.getAccValue() + " "  + prepareMessage.getLogPosition());
+
             approvalFrom.add(prepareMessage.getFrom());
+
+            System.err.println("%Approval from contains");
+            for (Integer integer : approvalFrom) {
+                System.err.println(integer);
+
+            }
 
             String proposed = prepareMessage.getAccNum();
 
             System.err.println("% received promise("+prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+"" +
                     ") from site " + prepareMessage.getFrom());
+
+
 
             if(prepareMessage.getAccValue() != null){
 
@@ -310,8 +321,6 @@ public class Proposer {
                     maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
                     currentValue = prepareMessage.getAccValue();
                 }
-
-
             }
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
