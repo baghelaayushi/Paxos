@@ -47,6 +47,7 @@ public class Proposer {
         return proposalNumber;
     }
 
+
     private void sendMessages(int stage,int position){
 
         String proposalNumber = null;
@@ -107,7 +108,16 @@ public class Proposer {
     }
 
 
-    public void initiateProposal(String reservation, String method){
+    public void initiateProposal(String reservation, String method, int position){
+
+        HashMap<Integer,Integer> flights = Learner.getInstance().getFlights();
+        String requiredFlights[] = reservation.split(" ")[2].split(",");
+        for(String s: requiredFlights) {
+            if (flights.get(Integer.parseInt(s)) <= 0){
+                System.err.println("Can't place reservation");
+            return;
+        }
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
@@ -117,19 +127,20 @@ public class Proposer {
         approvalFrom = new HashSet<>();
         valueLearned = new HashSet<>();
 
-        int position = 0;
-        for(String s: learner.log){
-            if(s == null){
-                break;
+        if(position ==0) {
+            for (String s : learner.log) {
+                if (s == null) {
+                    break;
+                }
+                position++;
             }
-            position++;
         }
 
         acceptSent = false;
 
         if(method.equals("reserve"))
             System.out.println("Reservation submitted for " + reservation.split(" ")[1]+".");
-        else
+        else if(method.equals("cancel"))
             System.out.println("Reservation cancelled for " + reservation.split(" ")[1]+".");
 
 

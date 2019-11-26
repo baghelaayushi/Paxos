@@ -6,6 +6,7 @@ import roles.Learner;
 import roles.Proposer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
@@ -84,6 +85,9 @@ public class Server {
         new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();
         new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();
 
+        Acceptor.getState();
+        Learner.getState();
+
 
 
 
@@ -112,18 +116,26 @@ public class Server {
             switch (command) {
                 case "reserve":
                     //TODO: Reserve seats
-                    proposer.initiateProposal(inp,"reserve");
+                    proposer.initiateProposal(inp,"reserve",0);
                     break;
                 case "cancel":
-                    proposer.initiateProposal(inp,"cancel");
+                    proposer.initiateProposal(inp,"cancel",0);
                     break;
                 case "view":
-                    Learner.viewDictionary();
+                    learner.viewDictionary();
                     break;
                 case "log":
-                    Learner.viewLog();
+                    learner.viewLog();
                     break;
                 case "exit":
+                    File savedLog = new File("./saved_log.json");
+                    File currentLog = new File("./current_log.json");
+                    try{
+                        savedLog.delete();
+                        currentLog.delete();
+                    }catch (Exception e){
+
+                    }
                     System.exit(0);
                 default:
             }

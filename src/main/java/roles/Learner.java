@@ -3,12 +3,10 @@ package roles;
 import com.google.gson.*;
 import helpers.Site;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
+import messaging.MessagingClient;
 import messaging.helpers.*;
 
 import java.util.HashMap;
@@ -22,10 +20,12 @@ public class Learner {
     HashMap<Integer,String> siteIDMap = null;
     HashMap<Integer,HashMap<String,Integer>> logMap  = null;
     String[] log = new String[1000];
-    List<Boolean> logCheck = new ArrayList<>();
+    boolean[] logCheck = new boolean[1000];
     Site site = null;
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
+
+    static HashMap<Integer,Integer> flight = new HashMap<>();
 
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -33,11 +33,11 @@ public class Learner {
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
         this.logMap = new HashMap<>();
+        this.flight = new HashMap<>();
+        for(int i = 1;i<20;i++)
+            flight.put(i,2);
         accNum = null;
         accValue = null;
-        for (int i =0 ; i < 10; i++){
-            logCheck.add(false);
-        }
     }
 
     public static Learner getInstance(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
@@ -48,6 +48,40 @@ public class Learner {
     }
     public static Learner getInstance(){
         return learner;
+    }
+
+    public HashMap<Integer,Integer> getFlights(){
+        return flight;
+    }
+
+    static void saveDictionary(int checkpoint){
+        try(FileWriter fw = new FileWriter("saved_dictionary.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<String,String> res: reservationMap.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(res.getValue());
+                tempArray.add(ob);
+                temp.add(res.getKey(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try(FileWriter fw = new FileWriter("saved_checkpoint.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            arr.add(checkpoint);
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     static void saveState(){
@@ -66,18 +100,53 @@ public class Learner {
 
 
     }
-    static void getState(){
+    public static void getState(){
         try {
             //convert the json string back to object
+            File f = new File("saved_log.json");
+            if(!f.exists())
+                return;
+
             BufferedReader backup = new BufferedReader(new FileReader("saved_log.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             Gson gson = new Gson();
-            learner.log = new String[Integer.MAX_VALUE];
+            if(!parsed.isJsonNull()) {
+                int i = 0;
+                for (JsonElement ob : parsed) {
+                    //System.out.println(ob);
+                    if(ob != null)
+                        learner.log[i] = ob.toString();
+                    i++;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            //convert the json string back to object
+            File f = new File("saved_dictionary.json");
+            if(!f.exists())
+                return;
+            BufferedReader backup = new BufferedReader(new FileReader("saved_dictionary.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
             int i =0;
-            for(JsonElement ob: parsed){
-                String s = ob.getAsString();
-                learner.log[i] = s;
+            if(!parsed.isJsonNull()) {
+                for (JsonElement ob : parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
+
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    reservationMap.put(myId, obj.getAsString());
+                }
             }
 
         } catch (IOException e) {
@@ -85,6 +154,33 @@ public class Learner {
         }
 
     }
+
+
+
+
+    private void learnLogs(int startIndex, int endIndex){
+        if(endIndex == 0)
+            return;
+        Queue<Integer> indexes = new LinkedList<>();
+
+        System.err.println("filling holes for position "+ startIndex + "  " + endIndex);
+        int i = startIndex;
+
+        while(i<endIndex){
+            if(log[i] == null)
+                indexes.add(i);
+            i++;
+
+        }
+        /*while(!indexes.isEmpty()){
+            Proposer proposer = Proposer.getInstance(null,null,null);
+            proposer.initiateProposal("res A 3,4","",indexes.remove());
+        }*/
+        //saveDictionary(endIndex);
+
+
+    }
+
 
     public void learner(LearnMessage message){
 
@@ -95,7 +191,6 @@ public class Learner {
 
         int siteQuorum = siteHashMap.size()/2+1;
 
-
         //Have we received anything for this log position?
         if(logMap.containsKey(requestedLogPosition)){
 
@@ -104,13 +199,18 @@ public class Learner {
 
                 int count = logMap.get(requestedLogPosition).get(accNum + '-' + accVal);
 
-                if(count+1>=siteQuorum && !logCheck.get(requestedLogPosition)){
+                if(count+1>=siteQuorum && log[requestedLogPosition]==null){
 
                     log[requestedLogPosition] = accVal;
-                    logCheck.add(requestedLogPosition,true);
+                    //logCheck[requestedLogPosition] = true;
+                    if((requestedLogPosition+1)%5 == 0){
+                      learnLogs(requestedLogPosition-4,requestedLogPosition);
+                    }
                     updateDictionary(accVal);
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
-//                    Proposer.valueLearned = new HashSet<>();
+
+                    saveState();
+                    Proposer.valueLearned = new HashSet<>();
 
 
                 }
@@ -139,24 +239,32 @@ public class Learner {
         if (value.split(" ")[0].equals("reserve")){
             String flights = value.split(" ")[2];
             reservationMap.put(reservationFor, flights);
+            String flightNumbers[] = flights.split(",");
+            for(String x : flightNumbers){
+                flight.replace(Integer.parseInt(x),flight.get(Integer.parseInt(x))-1);
+            }
         }
-        else reservationMap.remove(reservationFor);
+        else {
+            String flights = reservationMap.get(reservationFor);
+            String flightNumbers[] = flights.split(",");
+            for(String x : flightNumbers){
+                flight.replace(Integer.parseInt(x),flight.get(Integer.parseInt(x))+1);
+            }
+            reservationMap.remove(reservationFor);
+        }
 
     }
 
-    public static void viewDictionary(){
+    public void viewDictionary(){
         for (Map.Entry record: reservationMap.entrySet()){
             System.out.println(record.getKey() + " " + record.getValue());
         }
     }
 
-    public static void viewLog(){
-        int i =0;
-        for(String s:learner.log) {
-            if(i == 15){ break;
-            }
-            System.out.println(s);
-            i++;
+    public void viewLog(){
+        for(int i =0;i<15;i++){
+            System.out.println(learner.log[i]);
+
         }
     }
 

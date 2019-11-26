@@ -72,6 +72,7 @@ public class MessagingServer {
                         break;
                     case 8:
                         learner.learner((LearnMessage) message);
+                        break;
                 }
 
             } catch (Exception e) {
