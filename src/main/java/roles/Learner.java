@@ -167,6 +167,7 @@ public class Learner {
         for (int i = 0; i < currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
+                System.err.println("% Filling a hole at"+ i);
                 Proposer.getInstance(null, null, null)
                         .initiateProposal("reserve test 1,2","",i);
                 Proposer.wonLastRound = false;
@@ -200,7 +201,7 @@ public class Learner {
 
                     log[requestedLogPosition] = accVal;
                     //logCheck[requestedLogPosition] = true;
-                    if((requestedLogPosition+1)%3 == 0){
+                    if((requestedLogPosition+1)%5 == 0){
                         System.err.println("% checkpointing at log position" + requestedLogPosition);
                         new Thread(()->learnLogs(requestedLogPosition)).start();
                     }
