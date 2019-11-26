@@ -121,7 +121,6 @@ public class Acceptor {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
 
-                System.err.println("SendCTL: " + site.getSiteNumber() + " " + client.getValue().getSiteNumber());
                 if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                     instance.learner(learnmessage);
                 }
@@ -257,7 +256,6 @@ public class Acceptor {
                                 ") from site " + ackmessage.getFrom());
                         Proposer.valueLearned.add(sender);
                     } else {
-                        System.err.println("% Resetting my own last rounds");
                         Proposer.wonLastRound = false;
                         Proposer.valueLearned = new HashSet<>();
                         System.err.println("% received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +
