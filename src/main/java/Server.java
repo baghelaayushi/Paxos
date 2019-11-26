@@ -6,6 +6,7 @@ import roles.Learner;
 import roles.Proposer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
@@ -127,6 +128,14 @@ public class Server {
                     learner.viewLog();
                     break;
                 case "exit":
+                    File savedLog = new File("./saved_log.json");
+                    File currentLog = new File("./current_log.json");
+                    try{
+                        savedLog.delete();
+                        currentLog.delete();
+                    }catch (Exception e){
+
+                    }
                     System.exit(0);
                 default:
             }

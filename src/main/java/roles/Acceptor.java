@@ -84,6 +84,7 @@ public class Acceptor {
             Gson gson = new Gson();
             for(JsonElement ob: parsed) {
                 JsonObject temp = ob.getAsJsonObject();
+                System.out.println(temp);
                 Set<String> id = temp.keySet();
                 String myId = "";
                 for (String s : id)
@@ -205,6 +206,8 @@ public class Acceptor {
 
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
+            System.out.println("new accepted entry created");
+
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
         }
@@ -231,41 +234,42 @@ public class Acceptor {
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
 
+                if(acceptedEntries.get(message.getLogPosition()).getAccVal() == null ||acceptedEntries.get(message.getLogPosition()).getAccVal().equals(accValue)) {
+                    AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
+                    acceptedRequest.setMaxPrepare(maxPrepare);
+                    acceptedRequest.setAccNum(Integer.parseInt(accNum));
+                    acceptedRequest.setAccVal(accValue);
+                    acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
+                    saveState();
 
-                AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
-                acceptedRequest.setMaxPrepare(maxPrepare);
-                acceptedRequest.setAccNum(Integer.parseInt(accNum));
-                acceptedRequest.setAccVal(accValue);
-                acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
-                saveState();
+                    ackmessage.setAccNum(accNum);
+                    ackmessage.setAccValue(accValue);
+                    ackmessage.setAck(true);
+                    ackmessage.setMessageType(6);
+                    ackmessage.setFrom(site.getSiteNumber());
+                    ackmessage.setLogPosition(message.getLogPosition());
+                    //sending acceptance message to proposer
+                    if (sender == site.getSiteNumber()) {
 
-                ackmessage.setAccNum(accNum);
-                ackmessage.setAccValue(accValue);
-                ackmessage.setAck(true);
-                ackmessage.setMessageType(6);
-                ackmessage.setFrom(site.getSiteNumber());
-                ackmessage.setLogPosition(message.getLogPosition());
-                //sending acceptance message to proposer
-                if(sender == site.getSiteNumber()){
-
-                    System.err.println("% self- received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
-                            ") from site " + ackmessage.getFrom());
-                    Proposer.valueLearned.add(sender);
-                }else {
-                    System.err.println("% Resetting my own last rounds");
-                    Proposer.wonLastRound = false;
-                    Proposer.valueLearned = new HashSet<>();
-                    System.err.println("% received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
-                            ") from site " + ackmessage.getFrom());
-                    sendAckMessages(sender, ackmessage);
+                        System.err.println("% self- received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +
+                                ") from site " + ackmessage.getFrom());
+                        Proposer.valueLearned.add(sender);
+                    } else {
+                        System.err.println("% Resetting my own last rounds");
+                        Proposer.wonLastRound = false;
+                        Proposer.valueLearned = new HashSet<>();
+                        System.err.println("% received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +
+                                ") from site " + ackmessage.getFrom());
+                        sendAckMessages(sender, ackmessage);
+                    }
+                    //sending acceptance to learners
+                    sendCommitToLearner(sender,message.getLogPosition());
                 }
             }
             catch (Exception e){
                 System.out.println(e);
             }
 
-            //sending acceptance to learners
-            sendCommitToLearner(sender,message.getLogPosition());
         }
 
     }
