@@ -116,8 +116,8 @@ public class Learner {
 
         try{
             Site messageFrom = siteHashMap.get(message.getFrom());
-            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), messageFrom.getRandomPort());
-            client.send(new LogPositionMessage(position, site.getSiteNumber()));
+            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), site.getRandomPort());
+            client.send(new LogPositionMessage(position, site.getSiteNumber()), messageFrom.getRandomPort());
             client.close();
         }catch (Exception e){
             System.err.println(e.getStackTrace());
@@ -137,8 +137,8 @@ public class Learner {
                 int port = client.getValue().getRandomPort();
 
                 if(client.getValue().getSiteNumber() != site.getSiteNumber()){
-                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                    mClient.send(message);
+                    MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
+                    mClient.send(message, port);
                     mClient.close();
                 }
             }

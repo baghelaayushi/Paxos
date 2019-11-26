@@ -121,12 +121,13 @@ public class Acceptor {
                 String destinationAddress = client.getValue().getIpAddress();
                 int port = client.getValue().getRandomPort();
 
+                System.err.println("SendCTL: " + site.getSiteNumber() + " " + client.getValue().getSiteNumber());
                 if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                     instance.learner(learnmessage);
                 }
                 else {
-                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                    mClient.send(learnmessage);
+                    MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
+                    mClient.send(learnmessage, port);
                     mClient.close();
                 }
             }
@@ -141,10 +142,10 @@ public class Acceptor {
         try {
             String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
             int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-            MessagingClient mClient = new MessagingClient(destinationAddress, port);
+            MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
 
 
-            mClient.send(ack);
+            mClient.send(ack, port);
             mClient.close();
         }
         catch (IOException e){
