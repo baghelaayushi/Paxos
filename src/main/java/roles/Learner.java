@@ -36,6 +36,8 @@ public class Learner {
         this.flight = new HashMap<>();
         for(int i = 1;i<20;i++)
             flight.put(i,2);
+
+        flight.put(-1,1000);
         accNum = null;
         accValue = null;
     }
@@ -161,18 +163,24 @@ public class Learner {
     private void learnLogs(int currentPosition){
 
         //Run the synod algorithm for all positions
-
-        //TODO:Check specific later
-
-        for (int i = 0; i < currentPosition; i++){
+        int start = 0;
+        int offSet = currentPosition % 5;
+        int lowerBound = currentPosition - offSet;
+        if(log[lowerBound] != null){
+            start = lowerBound;
+        }
+        for (int i = start; i < currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
                 Proposer.getInstance(null, null, null)
-                        .initiateProposal("reserve test 1,2","",i);
+                        .initiateProposal("reserve test -1,-1","",i);
                 Proposer.wonLastRound = false;
+                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
+
             }
         }
+
 
 
 
