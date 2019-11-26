@@ -2,7 +2,6 @@ package roles;
 
 
 import com.google.gson.*;
-import helpers.Event;
 
 import helpers.AcceptedRequest;
 
@@ -201,7 +200,7 @@ public class Acceptor {
     public void processAcceptRequest(AcceptMessage message) {
 
         int sender = message.getFrom();
-        String proposalNumber[] = message.getCompleteProposalNumber().split("-");
+        String proposalNumber[] = message.getProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();

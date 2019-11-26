@@ -284,11 +284,10 @@ public class Learner {
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
-        if(checkpoint == -1){
-            return;
+        if(checkpoint!=-1) {
+            learner.findPointer();
+            learner.learnLogsRecovery(checkpoint, logPositionMax);
         }
-        learner.findPointer();
-        learner.learnLogsRecovery(checkpoint,logPositionMax);
     }
 
     private void learnLogsRecovery(int currentPosition, int tillPosition){
@@ -325,6 +324,8 @@ public class Learner {
                 Proposer.getInstance(null, null, null)
                         .initiateProposal("reserve test -1,-1","",i);
                 Proposer.wonLastRound = false;
+                Proposer.valueLearned = new HashSet<>();
+                Proposer.approvalFrom = new HashSet<>();
                 System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
 
             }

@@ -58,7 +58,7 @@ public class Server {
             siteIDMap.put(site_number,host.getKey());
 
 
-            //siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
+//            siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
 
             Site site = new Site(siteInfo.get("ip_address").getAsString(),
                     siteInfo.get("udp_start_port").getAsString(),
@@ -130,9 +130,16 @@ public class Server {
                 case "exit":
                     File savedLog = new File("./saved_log.json");
                     File currentLog = new File("./current_log.json");
+                    File currentDictionary = new File("./saved_dictionary.json");
+                    File checkpoint = new File("./saved_checkpoint.json");
+                    File savedFlight = new File("./saved_flight.json");
+
                     try{
                         savedLog.delete();
                         currentLog.delete();
+                        currentDictionary.delete();
+                        checkpoint.delete();
+                        savedFlight.delete();
                     }catch (Exception e){
 
                     }

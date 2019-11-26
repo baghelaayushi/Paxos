@@ -16,11 +16,10 @@ public class Proposer {
     static Proposer instance = null;
 
     Site site = null;
-    int maxProposalNumber = -1;
     String latestProposalCombination = "";
     HashMap<String, Site> siteHashMap = null;
     String currentValue = null;
-    HashSet<Integer> approvalFrom = new HashSet<Integer>();
+    static HashSet<Integer> approvalFrom = new HashSet<Integer>();
     static HashSet<Integer> valueLearned = new HashSet<Integer>();
     boolean acceptSent = false;
     static Boolean wonLastRound = false;
@@ -62,7 +61,6 @@ public class Proposer {
         }
 
         if(stage == 2){
-//            System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
             System.err.println("% 2- sending accept("+proposalNumbers[position]+","+currentValue+") to all sites");
         }
 
@@ -95,7 +93,7 @@ public class Proposer {
                 // to send an accept message to acceptors
                 if(stage == 2) {
 
-                    AcceptMessage message = new AcceptMessage(position, latestProposalCombination, proposalNumbers[position], currentValue, site.getSiteNumber());
+                    AcceptMessage message = new AcceptMessage(position, latestProposalCombination, currentValue, site.getSiteNumber());
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         acceptorInstance.processAcceptRequest(message);
                     }else {
@@ -249,9 +247,6 @@ public class Proposer {
 
             approvalFrom.add(prepareMessage.getFrom());
 
-
-
-
             String proposed = prepareMessage.getAccNum();
 
             System.err.println("% received promise("+prepareMessage.getAccNum()+","+prepareMessage.getAccValue()+"" +
@@ -260,7 +255,7 @@ public class Proposer {
             if(prepareMessage.getAccValue() != null){
 
                 if(maxRecvdAckNum != -1){
-                    if(Integer.parseInt(proposed) > maxRecvdAckNum){
+                    if(Integer.parseInt(proposed) >= maxRecvdAckNum){
                         maxRecvdAckNum = Integer.parseInt(proposed);
                         currentValue = prepareMessage.getAccValue();
                     }
@@ -271,7 +266,6 @@ public class Proposer {
 
 
             }
-
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
