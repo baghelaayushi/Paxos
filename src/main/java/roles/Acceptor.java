@@ -186,10 +186,15 @@ public class Acceptor {
 
         ackmessage.setMessageType(3);
 
+        System.err.println("%%%%%%%%%%%%%%%%%%%%%%");
+        System.err.println("From "+ site.getSiteNumber());
+        System.err.println("From message  "+ message.getFrom());
+
         if(sender == site.getSiteNumber()){
             proposer.processProposalAcks(ackmessage,true);
         }
         else {
+
             sendAckMessages(sender, ackmessage);
         }
         maxPrepare = Integer.parseInt(proposed);
@@ -206,7 +211,7 @@ public class Acceptor {
 
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
-            System.out.println("new accepted entry created");
+//            System.out.println("new accepted entry created");
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
@@ -264,20 +269,8 @@ public class Acceptor {
                     }
                     //sending acceptance to learners
 
-                    if(sender == site.getSiteNumber()){
-                        LearnMessage learnmessage = new LearnMessage();
 
-                        learnmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
-                        learnmessage.setAccValue(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccVal()));
-
-                        learnmessage.setMessageType(8);
-                        learnmessage.setFrom(site.getSiteNumber());
-                        learnmessage.setLogPosition(message.getLogPosition());
-                        Learner.getInstance(null,null, null).learner(learnmessage);
-                    }else {
-                        sendCommitToLearner(sender,message.getLogPosition());
-
-                    }
+                    sendCommitToLearner(sender,message.getLogPosition());
 
                 }
             }
