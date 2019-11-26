@@ -283,8 +283,10 @@ public class Learner {
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
-        learner.findPointer();
-        learner.learnLogsRecovery(checkpoint,logPositionMax);
+        if(checkpoint!=-1) {
+            learner.findPointer();
+            learner.learnLogsRecovery(checkpoint, logPositionMax);
+        }
     }
 
     private void learnLogsRecovery(int currentPosition, int tillPosition){
