@@ -76,6 +76,9 @@ public class MessagingServer {
                     case 9:
                         learner.lastLogPointer(message);
                         break;
+                    case 10:
+                        //Send this back to the origin
+                        break;
                 }
 
             } catch (Exception e) {
