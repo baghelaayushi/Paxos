@@ -263,7 +263,22 @@ public class Acceptor {
                         sendAckMessages(sender, ackmessage);
                     }
                     //sending acceptance to learners
-                    sendCommitToLearner(sender,message.getLogPosition());
+
+                    if(sender == site.getSiteNumber()){
+                        LearnMessage learnmessage = new LearnMessage();
+
+                        learnmessage.setAccNum(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccNum()));
+                        learnmessage.setAccValue(String.valueOf(acceptedEntries.get(message.getLogPosition()).getAccVal()));
+
+                        learnmessage.setMessageType(8);
+                        learnmessage.setFrom(site.getSiteNumber());
+                        learnmessage.setLogPosition(message.getLogPosition());
+                        Learner.getInstance(null,null, null).learner(learnmessage);
+                    }else {
+                        sendCommitToLearner(sender,message.getLogPosition());
+
+                    }
+
                 }
             }
             catch (Exception e){

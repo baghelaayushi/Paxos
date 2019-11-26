@@ -82,6 +82,23 @@ public class Learner {
             e.printStackTrace();
         }
 
+        try(FileWriter fw = new FileWriter("saved_flight.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<Integer,Integer> res: flight.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(res.getValue());
+                tempArray.add(ob);
+                temp.add(res.getKey().toString(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     static void saveState(){
@@ -101,6 +118,7 @@ public class Learner {
 
     }
     public static void getState(){
+        int checkpoint = 0;
         try {
             //convert the json string back to object
             File f = new File("saved_log.json");
@@ -153,6 +171,53 @@ public class Learner {
             e.printStackTrace();
         }
 
+        try {
+            //convert the json string back to object
+            File f = new File("saved_checkpoint.json");
+            if(!f.exists())
+                return;
+            BufferedReader backup = new BufferedReader(new FileReader("saved_checkpoint.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            int i =0;
+            if(!parsed.isJsonNull()) {
+                checkpoint = Integer.parseInt(parsed.get(0).toString());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            //convert the json string back to object
+            File f = new File("saved_flight.json");
+            if(!f.exists())
+                return;
+            BufferedReader backup = new BufferedReader(new FileReader("saved_flight.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            int i =0;
+            if(!parsed.isJsonNull()) {
+                for (JsonElement ob : parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
+
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    flight.replace(Integer.parseInt(myId), Integer.parseInt(obj.getAsString()));
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 
@@ -173,6 +238,8 @@ public class Learner {
                 Proposer.wonLastRound = false;
             }
         }
+
+        saveDictionary(currentPosition);
 
 
 

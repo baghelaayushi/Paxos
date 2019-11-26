@@ -56,6 +56,7 @@ public class Server {
         for (Map.Entry<String, JsonElement> host : hostsObject.entrySet()){
             JsonObject siteInfo = host.getValue().getAsJsonObject();
             siteIDMap.put(site_number,host.getKey());
+
             //siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
 
             Site site = new Site(siteInfo.get("ip_address").getAsString(),
