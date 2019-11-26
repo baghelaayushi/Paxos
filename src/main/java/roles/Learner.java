@@ -116,8 +116,8 @@ public class Learner {
 
         try{
             Site messageFrom = siteHashMap.get(message.getFrom());
-            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), messageFrom.getRandomPort());
-            client.send(new LogPositionMessage(position, site.getSiteNumber()));
+            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), site.getRandomPort());
+            client.send(new LogPositionMessage(position, site.getSiteNumber()), messageFrom.getRandomPort());
             client.close();
         }catch (Exception e){
             System.err.println(e.getStackTrace());
@@ -137,8 +137,8 @@ public class Learner {
                 int port = client.getValue().getRandomPort();
 
                 if(client.getValue().getSiteNumber() != site.getSiteNumber()){
-                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                    mClient.send(message);
+                    MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
+                    mClient.send(message, port);
                     mClient.close();
                 }
             }
@@ -185,8 +185,8 @@ public class Learner {
                 int i = 0;
                 for (JsonElement ob : parsed) {
                     //System.out.println(ob);
-                    if(ob != null)
-                        learner.log[i] = ob.toString();
+                    if(ob != null && !ob.toString().equals("null"))
+                        learner.log[i] = ob.getAsString();
                     i++;
                 }
             }
@@ -317,7 +317,7 @@ public class Learner {
         if(log[lowerBound] != null){
             start = lowerBound;
         }
-        for (int i = start; i < currentPosition; i++){
+        for (int i = start; i <= currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
