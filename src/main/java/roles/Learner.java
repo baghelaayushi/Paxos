@@ -21,6 +21,7 @@ public class Learner {
     String[] log = new String[1000];
     boolean[] logCheck = new boolean[1000];
     Site site = null;
+    static int logPositionMax = Integer.MIN_VALUE;
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
 
@@ -28,6 +29,7 @@ public class Learner {
 
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
+        logPositionMax = Integer.MIN_VALUE;
         this.site = siteInformation;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
@@ -120,6 +122,33 @@ public class Learner {
             System.err.println(e.getStackTrace());
         }
 
+    }
+
+    public void findPointer(){
+        Message message = new Message();
+        message.setFrom(site.getSiteNumber());
+        message.setMessageType(9);
+        for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
+
+
+            try {
+                String destinationAddress = client.getValue().getIpAddress();
+                int port = client.getValue().getRandomPort();
+
+                if(client.getValue().getSiteNumber() != site.getSiteNumber()){
+                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
+                    mClient.send(message);
+                    mClient.close();
+                }
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setPointer(LogPositionMessage message){
+        logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
     }
 
     static void saveState(){
@@ -249,10 +278,12 @@ public class Learner {
 
     public static void getState(){
 
-        getLog();
+        getLogState();
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
+        learner.findPointer();
+        learner.learnLogsRecovery(checkpoint,logPositionMax);
     }
 
     private void learnLogsRecovery(int currentPosition, int tillPosition){

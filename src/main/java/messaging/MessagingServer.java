@@ -1,9 +1,6 @@
 package messaging;
 
-import messaging.helpers.AcceptMessage;
-import messaging.helpers.LearnMessage;
-import messaging.helpers.Message;
-import messaging.helpers.PrepareMessage;
+import messaging.helpers.*;
 import roles.Acceptor;
 import roles.Learner;
 import roles.Proposer;
@@ -75,6 +72,9 @@ public class MessagingServer {
                         break;
                     case 9:
                         learner.lastLogPointer(message);
+                        break;
+                    case 10:
+                        learner.setPointer((LogPositionMessage) message);
                         break;
                 }
 
