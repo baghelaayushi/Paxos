@@ -81,19 +81,20 @@ public class Acceptor {
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             if(!parsed.isJsonNull()){
-            Gson gson = new Gson();
-            for(JsonElement ob: parsed) {
-                JsonObject temp = ob.getAsJsonObject();
-                Set<String> id = temp.keySet();
-                String myId = "";
-                for (String s : id)
-                    myId = s;
+                Gson gson = new Gson();
+                for(JsonElement ob: parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    System.out.println(temp);
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
 
-                JsonArray array = temp.getAsJsonArray(myId);
-                JsonElement obj = array.get(0);
-                AcceptedRequest request = gson.fromJson(obj.getAsString(), AcceptedRequest.class);
-                instance.acceptedEntries.put(Integer.parseInt(myId), request);
-            }
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    AcceptedRequest request = gson.fromJson(obj.getAsString(), AcceptedRequest.class);
+                    instance.acceptedEntries.put(Integer.parseInt(myId), request);
+                }
 
             }
 
@@ -138,18 +139,18 @@ public class Acceptor {
     }
 
     private void sendAckMessages(int sender, PrepareAck ack){
-            try {
-                String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
-                int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-                MessagingClient mClient = new MessagingClient(destinationAddress, port);
+        try {
+            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
+            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
+            MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
 
-                mClient.send(ack);
-                mClient.close();
-            }
-            catch (IOException e){
-                e.printStackTrace();
-            }
+            mClient.send(ack);
+            mClient.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -165,6 +166,7 @@ public class Acceptor {
         //create a new entry in hashmap with max prepare as proposed and accnum and acc val as -1
 //        System.out.println("Accepting for Log Position " + message.getLogPosition());
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
+//            System.out.println("adding a new entry for " + message.getLogPosition());
 
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
@@ -184,7 +186,6 @@ public class Acceptor {
 
         ackmessage.setMessageType(3);
 
-        System.err.println("% for the request, returning " + ackmessage.getAccValue() + ackmessage.getAccNum());
         if(sender == site.getSiteNumber()){
             proposer.processProposalAcks(ackmessage,true);
         }
@@ -205,6 +206,8 @@ public class Acceptor {
 
         if(!acceptedEntries.containsKey(message.getLogPosition())) {
 
+            System.out.println("new accepted entry created");
+
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
         }
@@ -214,7 +217,6 @@ public class Acceptor {
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
-            ackmessage.setOriginalValue(message.getProposedValue());
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             ackmessage.setFrom(site.getSiteNumber());
@@ -232,42 +234,42 @@ public class Acceptor {
                 accValue = message.getProposedValue();
                 maxPrepare = Integer.parseInt(proposed);
 
+                if(acceptedEntries.get(message.getLogPosition()).getAccVal() == null ||acceptedEntries.get(message.getLogPosition()).getAccVal().equals(accValue)) {
+                    AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
+                    acceptedRequest.setMaxPrepare(maxPrepare);
+                    acceptedRequest.setAccNum(Integer.parseInt(accNum));
+                    acceptedRequest.setAccVal(accValue);
+                    acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
+                    saveState();
 
-                AcceptedRequest acceptedRequest = acceptedEntries.get(message.getLogPosition());
-                acceptedRequest.setMaxPrepare(maxPrepare);
-                acceptedRequest.setAccNum(Integer.parseInt(accNum));
-                acceptedRequest.setAccVal(accValue);
-                acceptedEntries.replace(message.getLogPosition(), acceptedRequest);
-                saveState();
+                    ackmessage.setAccNum(accNum);
+                    ackmessage.setAccValue(accValue);
+                    ackmessage.setAck(true);
+                    ackmessage.setMessageType(6);
+                    ackmessage.setFrom(site.getSiteNumber());
+                    ackmessage.setLogPosition(message.getLogPosition());
+                    //sending acceptance message to proposer
+                    if (sender == site.getSiteNumber()) {
 
-                ackmessage.setAccNum(accNum);
-                ackmessage.setAccValue(accValue);
-                ackmessage.setAck(true);
-                ackmessage.setMessageType(6);
-                ackmessage.setFrom(site.getSiteNumber());
-                ackmessage.setOriginalValue(message.getProposedValue());
-                ackmessage.setLogPosition(message.getLogPosition());
-                //sending acceptance message to proposer
-                if(sender == site.getSiteNumber()){
-
-                    System.err.println("% self- received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
-                            ") from site " + ackmessage.getFrom());
-                    Proposer.valueLearned.add(sender);
-                }else {
-                    System.err.println("% Resetting my own last rounds");
-                    Proposer.wonLastRound = false;
-                    Proposer.valueLearned = new HashSet<>();
-                    System.err.println("% received ack("+ackmessage.getAccNum()+","+ackmessage.getAccValue()+"" +
-                            ") from site " + ackmessage.getFrom());
-                    sendAckMessages(sender, ackmessage);
+                        System.err.println("% self- received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +
+                                ") from site " + ackmessage.getFrom());
+                        Proposer.valueLearned.add(sender);
+                    } else {
+                        System.err.println("% Resetting my own last rounds");
+                        Proposer.wonLastRound = false;
+                        Proposer.valueLearned = new HashSet<>();
+                        System.err.println("% received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +
+                                ") from site " + ackmessage.getFrom());
+                        sendAckMessages(sender, ackmessage);
+                    }
+                    //sending acceptance to learners
+                    sendCommitToLearner(sender,message.getLogPosition());
                 }
             }
             catch (Exception e){
                 System.out.println(e);
             }
 
-            //sending acceptance to learners
-            sendCommitToLearner(sender,message.getLogPosition());
         }
 
     }

@@ -25,12 +25,17 @@ public class Learner {
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
 
+    static HashMap<Integer,Integer> flight = new HashMap<>();
+
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
         this.site = siteInformation;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
         this.logMap = new HashMap<>();
+        this.flight = new HashMap<>();
+        for(int i = 1;i<20;i++)
+            flight.put(i,2);
         accNum = null;
         accValue = null;
     }
@@ -43,6 +48,10 @@ public class Learner {
     }
     public static Learner getInstance(){
         return learner;
+    }
+
+    public HashMap<Integer,Integer> getFlights(){
+        return flight;
     }
 
     static void saveDictionary(int checkpoint){
@@ -229,8 +238,19 @@ public class Learner {
         if (value.split(" ")[0].equals("reserve")){
             String flights = value.split(" ")[2];
             reservationMap.put(reservationFor, flights);
+            String flightNumbers[] = flights.split(",");
+            for(String x : flightNumbers){
+                flight.replace(Integer.parseInt(x),flight.get(Integer.parseInt(x))-1);
+            }
         }
-        else reservationMap.remove(reservationFor);
+        else {
+            String flights = reservationMap.get(reservationFor);
+            String flightNumbers[] = flights.split(",");
+            for(String x : flightNumbers){
+                flight.replace(Integer.parseInt(x),flight.get(Integer.parseInt(x))+1);
+            }
+            reservationMap.remove(reservationFor);
+        }
 
     }
 
