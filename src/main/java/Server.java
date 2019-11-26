@@ -34,7 +34,6 @@ public class Server {
 
     public static void bootstrapProject(String selfIdentifier){
 
-//        System.out.println("Starting as " + selfIdentifier);
         try {
             processHosts(selfIdentifier);
             initialize();
@@ -57,7 +56,7 @@ public class Server {
         for (Map.Entry<String, JsonElement> host : hostsObject.entrySet()){
             JsonObject siteInfo = host.getValue().getAsJsonObject();
             siteIDMap.put(site_number,host.getKey());
-//            siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
+            siteInfo.add("ip_address",new JsonPrimitive("127.0.0.1"));
             Site site = new Site(siteInfo.get("ip_address").getAsString(),
                     siteInfo.get("udp_start_port").getAsString(),
                     siteInfo.get("udp_end_port").getAsString(),site_number++);
@@ -66,7 +65,6 @@ public class Server {
 //            System.out.println("Adding to SHM" + host.getKey() + " " + site.getRandomPort());
 
             if(host.getKey().equalsIgnoreCase(self)){
-//                System.out.println("Myself " + site.getIpAddress() + " " + site.getRandomPort());
                 mySite = site;
             }
         }

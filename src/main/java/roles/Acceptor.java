@@ -81,20 +81,20 @@ public class Acceptor {
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
             if(!parsed.isJsonNull()){
-            Gson gson = new Gson();
-            for(JsonElement ob: parsed) {
-                JsonObject temp = ob.getAsJsonObject();
-                System.out.println(temp);
-                Set<String> id = temp.keySet();
-                String myId = "";
-                for (String s : id)
-                    myId = s;
+                Gson gson = new Gson();
+                for(JsonElement ob: parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    System.out.println(temp);
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
 
-                JsonArray array = temp.getAsJsonArray(myId);
-                JsonElement obj = array.get(0);
-                AcceptedRequest request = gson.fromJson(obj.getAsString(), AcceptedRequest.class);
-                instance.acceptedEntries.put(Integer.parseInt(myId), request);
-            }
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    AcceptedRequest request = gson.fromJson(obj.getAsString(), AcceptedRequest.class);
+                    instance.acceptedEntries.put(Integer.parseInt(myId), request);
+                }
 
             }
 
@@ -139,18 +139,18 @@ public class Acceptor {
     }
 
     private void sendAckMessages(int sender, PrepareAck ack){
-            try {
-                String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
-                int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-                MessagingClient mClient = new MessagingClient(destinationAddress, port);
+        try {
+            String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
+            int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
+            MessagingClient mClient = new MessagingClient(destinationAddress, port);
 
 
-                mClient.send(ack);
-                mClient.close();
-            }
-            catch (IOException e){
-                e.printStackTrace();
-            }
+            mClient.send(ack);
+            mClient.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
 
     }
 

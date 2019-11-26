@@ -158,25 +158,22 @@ public class Learner {
 
 
 
-    private void learnLogs(int startIndex, int endIndex){
-        if(endIndex == 0)
-            return;
-        Queue<Integer> indexes = new LinkedList<>();
+    private void learnLogs(int currentPosition){
 
-        System.err.println("filling holes for position "+ startIndex + "  " + endIndex);
-        int i = startIndex;
+        //Run the synod algorithm for all positions
 
-        while(i<endIndex){
-            if(log[i] == null)
-                indexes.add(i);
-            i++;
+        //TODO:Check specific later
 
+        for (int i = 0; i < currentPosition; i++){
+            if(log[i] == null){
+                //There's a hole, run synod
+                Proposer.getInstance(null, null, null)
+                        .initiateProposal("reserve test 1,2","",i);
+                Proposer.wonLastRound = false;
+            }
         }
-        /*while(!indexes.isEmpty()){
-            Proposer proposer = Proposer.getInstance(null,null,null);
-            proposer.initiateProposal("res A 3,4","",indexes.remove());
-        }*/
-        //saveDictionary(endIndex);
+
+
 
 
     }
@@ -203,13 +200,15 @@ public class Learner {
 
                     log[requestedLogPosition] = accVal;
                     //logCheck[requestedLogPosition] = true;
-                    if((requestedLogPosition+1)%5 == 0){
-                      learnLogs(requestedLogPosition-4,requestedLogPosition);
+                    if((requestedLogPosition+1)%3 == 0){
+                        System.err.println("% checkpointing at log position" + requestedLogPosition);
+                        new Thread(()->learnLogs(requestedLogPosition)).start();
                     }
-                    updateDictionary(accVal);
+                    new Thread(()-> updateDictionary(accVal)).start();
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
+                    new Thread(Learner::saveState).start();
+                    System.err.println("% Finished saving states");
 
-                    saveState();
                     Proposer.valueLearned = new HashSet<>();
 
 

@@ -160,9 +160,12 @@ public class Proposer {
         }
 
 
-        reAttempt(executor, future, position);
-        reAttempt(executor, future, position);
-        reAttempt(executor, future, position);
+        if(Learner.getLog()[position] == null)
+            reAttempt(executor, future, position);
+        if(Learner.getLog()[position] == null)
+            reAttempt(executor, future, position);
+        if(Learner.getLog()[position] == null)
+            reAttempt(executor, future, position);
 
         currentValue = reservation;
 
@@ -175,6 +178,7 @@ public class Proposer {
         try {
             future = executor.submit(new Tasks());
             future.get(3, TimeUnit.SECONDS);
+            System.err.println(Learner.getLog()[position]);
             checkSetAndAttemptSend(position);
         }catch (Exception e1){
             future.cancel(true);
@@ -214,7 +218,7 @@ public class Proposer {
         valueLearned.add(message.getFrom());
 
         if (valueLearned.size() > (siteHashMap.size() / 2)) {
-            System.out.println("I have won");
+//            System.out.println("I have won");
             wonLastRound = true;
         }
     }
@@ -223,12 +227,25 @@ public class Proposer {
 
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
-           System.out.println("The reservation was rejected");
+            PrepareAck message = (PrepareAck) ack;
+            System.err.println("% Was rejected, reproposing with a higher value "
+                    + ack.getOriginalValue()
+                    + " max Prop should be atleast "+ message.getAccNum() +
+                    "for position "+ message.getLogPosition());
+
+            maxProposalNumber += Integer.parseInt(message.getAccNum());
+            initiateProposal(ack.getOriginalValue(),"",1);
+//
+//           System.out.println("The reservation was rejected");
+
         }else{
             //TODO: Add to the set
             PrepareAck prepareMessage = (PrepareAck)ack;
 
             approvalFrom.add(prepareMessage.getFrom());
+
+
+
 
             String proposed = prepareMessage.getAccNum();
 
