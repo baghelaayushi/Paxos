@@ -23,7 +23,7 @@ public class MessagingServer {
 
     public MessagingServer(int port) throws SocketException, IOException {
         this.port = port;
-        this.udpSocket = new DatagramSocket(this.port);
+        this.udpSocket = new DatagramSocket(this.port+1);
         //need to change this(probably create an object in server class)
     }
 
