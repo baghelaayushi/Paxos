@@ -167,6 +167,7 @@ public class Learner {
         for (int i = 0; i < currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
+                System.err.println("% Filling a hole at"+ i);
                 Proposer.getInstance(null, null, null)
                         .initiateProposal("reserve test 1,2","",i);
                 Proposer.wonLastRound = false;
