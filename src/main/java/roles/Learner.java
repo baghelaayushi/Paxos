@@ -279,10 +279,14 @@ public class Learner {
 
     public static void getState(){
 
+
         getLogState();
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
+        if(checkpoint == -1){
+            return;
+        }
         learner.findPointer();
         learner.learnLogsRecovery(checkpoint,logPositionMax);
     }

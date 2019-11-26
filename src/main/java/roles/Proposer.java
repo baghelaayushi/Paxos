@@ -26,6 +26,9 @@ public class Proposer {
     static Boolean wonLastRound = false;
     int maxRecvdAckNum = -1;
 
+    int[] proposalNumbers = new int[1000];
+
+
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
 
         //TODO:System could have crashed, check that.
@@ -39,10 +42,11 @@ public class Proposer {
         return instance;
     }
 
-    private String getProposalNumber(){
+    private String getProposalNumber(int logPosition){
 
-        maxProposalNumber++;
-        String proposalNumber = maxProposalNumber +"-"+site.getSiteNumber();
+//        maxProposalNumber++;
+        proposalNumbers[logPosition]++;
+        String proposalNumber = proposalNumbers[logPosition] +"-"+site.getSiteNumber();
         latestProposalCombination = proposalNumber;
         return proposalNumber;
     }
@@ -53,12 +57,13 @@ public class Proposer {
         String proposalNumber = null;
 
         if(stage == 1){
-            proposalNumber = getProposalNumber();
-            System.err.println("% sending prepare("+proposalNumber+") to all sites");
+            proposalNumber = getProposalNumber(position);
+            System.err.println("% sending prepare("+proposalNumber+") to all sites for log position " + position);
         }
 
         if(stage == 2){
-            System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
+//            System.err.println("% sending accept("+maxProposalNumber+","+currentValue+") to all sites");
+            System.err.println("% 2- sending accept("+proposalNumbers[position]+","+currentValue+") to all sites");
         }
 
 
@@ -90,7 +95,7 @@ public class Proposer {
                 // to send an accept message to acceptors
                 if(stage == 2) {
 
-                    AcceptMessage message = new AcceptMessage(position, latestProposalCombination, maxProposalNumber, currentValue, site.getSiteNumber());
+                    AcceptMessage message = new AcceptMessage(position, latestProposalCombination, proposalNumbers[position], currentValue, site.getSiteNumber());
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
                         acceptorInstance.processAcceptRequest(message);
                     }else {
@@ -148,7 +153,7 @@ public class Proposer {
             sendMessages(1,position);
         else{
             System.err.println("% executing an optimized paxos");
-            getProposalNumber();
+            getProposalNumber(position);
             sendMessages(2, position);
         }
 
@@ -233,7 +238,7 @@ public class Proposer {
                     + " max Prop should be atleast "+ message.getAccNum() +
                     "for position "+ message.getLogPosition());
 
-            maxProposalNumber += Integer.parseInt(message.getAccNum());
+            proposalNumbers[message.getLogPosition()] += Integer.parseInt(message.getAccNum());
             initiateProposal(ack.getOriginalValue(),"",1);
 //
 //           System.out.println("The reservation was rejected");
