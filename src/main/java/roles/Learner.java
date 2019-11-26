@@ -36,6 +36,8 @@ public class Learner {
         this.flight = new HashMap<>();
         for(int i = 1;i<20;i++)
             flight.put(i,2);
+
+        flight.put(-1,1000);
         accNum = null;
         accValue = null;
     }
@@ -117,8 +119,7 @@ public class Learner {
 
 
     }
-    public static void getState(){
-        int checkpoint = 0;
+    public static void getLogState(){
         try {
             //convert the json string back to object
             File f = new File("saved_log.json");
@@ -143,6 +144,9 @@ public class Learner {
             e.printStackTrace();
         }
 
+    }
+
+    public static void getDictionary(){
         try {
             //convert the json string back to object
             File f = new File("saved_dictionary.json");
@@ -170,12 +174,14 @@ public class Learner {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+    }
+    public static int getCheckPoint(){
+        int checkpoint = 0;
         try {
             //convert the json string back to object
             File f = new File("saved_checkpoint.json");
             if(!f.exists())
-                return;
+                return -1;
             BufferedReader backup = new BufferedReader(new FileReader("saved_checkpoint.json"));
             JsonParser parser = new JsonParser();
             JsonArray parsed = parser.parse(backup).getAsJsonArray();
@@ -188,7 +194,9 @@ public class Learner {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        return checkpoint;
+    }
+    public static void getStoredFlights(){
         try {
             //convert the json string back to object
             File f = new File("saved_flight.json");
@@ -216,30 +224,39 @@ public class Learner {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
-
+    public static void getState(){
+        getLog();
+        getDictionary();
+        getStoredFlights();
+        int checkpoint = getCheckPoint();
+    }
 
 
     private void learnLogs(int currentPosition){
 
         //Run the synod algorithm for all positions
-
-        //TODO:Check specific later
-
-        for (int i = 0; i < currentPosition; i++){
+        int start = 0;
+        int offSet = currentPosition % 5;
+        int lowerBound = currentPosition - offSet;
+        if(log[lowerBound] != null){
+            start = lowerBound;
+        }
+        for (int i = start; i < currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
                 Proposer.getInstance(null, null, null)
-                        .initiateProposal("reserve test 1,2","",i);
+                        .initiateProposal("reserve test -1,-1","",i);
                 Proposer.wonLastRound = false;
+                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
+
             }
         }
 
-        saveDictionary(currentPosition);
+        //saveDictionary(currentPosition);
+
 
 
 
