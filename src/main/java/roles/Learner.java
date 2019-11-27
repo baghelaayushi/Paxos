@@ -293,7 +293,7 @@ public class Learner {
     private void learnLogsRecovery(int currentPosition, int tillPosition){
 
         //Run the synod algorithm for all positions
-        for (int i = currentPosition+1; i <= tillPosition; i++){
+        for (int i = currentPosition; i <= tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
@@ -302,6 +302,11 @@ public class Learner {
                 Proposer.wonLastRound = false;
                 System.err.println("%%%%%%%%%%%%%%%%%%%%%%");
 
+            }
+        }
+        for (int i = currentPosition; i <= tillPosition; i++){
+            if(log[i] != null){
+                updateDictionary(log[i]);
             }
         }
 
