@@ -236,7 +236,6 @@ public class Proposer {
             future.cancel(true);
         }
 
-        System.err.println("% Is there still a null?");
         if(Learner.getLog()[position] == null)
             reAttempt(executor, future, position);
         if(Learner.getLog()[position] == null)
@@ -303,10 +302,7 @@ public class Proposer {
 
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
-            System.err.println("% Was rejected, reproposing with a higher value "
-                    + prepareMessage.getOriginalValue()
-                    + " max Prop should be atleast "+ prepareMessage.getAccNum() +
-                    "for position "+ prepareMessage.getLogPosition());
+            System.err.println("% Was rejected, reproposing with a higher value");
 
             proposalNumbers[prepareMessage.getLogPosition()] += Integer.parseInt(prepareMessage.getAccNum());
             saveState();
