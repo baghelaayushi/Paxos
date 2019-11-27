@@ -1,6 +1,10 @@
 package messaging.helpers;
 
 public class PrepareAck extends Message {
+    public boolean isAck() {
+        return Ack;
+    }
+
     boolean Ack;
     String accNum;
 

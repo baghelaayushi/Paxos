@@ -185,7 +185,6 @@ public class Acceptor {
         ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
         ackmessage.setLogPosition(message.getLogPosition());
-
         ackmessage.setMessageType(3);
 
 
@@ -221,6 +220,8 @@ public class Acceptor {
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
+            ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
+//            ackmessage.setLogPosition(message.getLogPosition());
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             ackmessage.setFrom(site.getSiteNumber());
