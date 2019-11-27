@@ -170,6 +170,9 @@ public class Acceptor {
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
         }
+        AcceptedRequest request = acceptedEntries.get(message.getLogPosition());
+        request.setMaxPrepare(Integer.parseInt(proposed));
+        acceptedEntries.replace(message.getLogPosition(),request);
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
 
         if (Integer.parseInt(proposed) < prep) {

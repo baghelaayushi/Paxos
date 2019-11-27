@@ -98,7 +98,7 @@ public class Proposer {
                 int i = 0;
                 for (JsonElement ob : parsed) {
                     //System.out.println(ob);
-                    if(ob != null && ob.toString().equals("null"))
+                    if(ob != null && !ob.toString().equals("0"))
                         instance.proposalNumbers[i] = Integer.parseInt(ob.getAsString());
                     i++;
                 }
