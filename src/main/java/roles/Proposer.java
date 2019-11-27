@@ -303,7 +303,7 @@ public class Proposer {
 
             proposalNumbers[message.getLogPosition()] += Integer.parseInt(message.getAccNum());
             saveState();
-            initiateProposal(ack.getOriginalValue(),"",1);
+            initiateProposal(proposalValues[message.getLogPosition()],"",message.getLogPosition());
 
 
         }else{
