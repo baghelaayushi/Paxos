@@ -149,10 +149,7 @@ public class Learner {
     }
 
     public void setPointer(LogPositionMessage message){
-        System.err.println(logPositionMax + " " + message.getLogPosition());
         logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
-        System.err.println(logPositionMax + " " + message.getLogPosition());
-
     }
 
     static void saveState(){

@@ -72,7 +72,6 @@ public class MessagingServer {
                         learner.lastLogPointer(message);
                         break;
                     case 10:
-                        System.err.println("Recvd setPtr");
                         learner.setPointer((LogPositionMessage) message);
                         break;
                 }
