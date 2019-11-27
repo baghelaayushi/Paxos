@@ -172,11 +172,13 @@ public class Proposer {
 
         HashMap<Integer,Integer> flights = Learner.getInstance().getFlights();
         String requiredFlights[] = reservation.split(" ")[2].split(",");
-        for(String s: requiredFlights) {
-            if (flights.get(Integer.parseInt(s)) <= 0){
-                System.err.println("Can't place reservation");
-            return;
-        }
+        if(reservation.split(" ")[0].equals("reserve")) {
+            for (String s : requiredFlights) {
+                if (flights.get(Integer.parseInt(s)) <= 0) {
+                    System.err.println("Can't place reservation");
+                    return;
+                }
+            }
         }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
