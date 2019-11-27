@@ -17,10 +17,10 @@
     "cherry": {
       "tcp_start_port": 9003,
       "tcp_end_port": 9005,
-      "udp_start_port": 15007,
-      "udp_end_port": 15009,
+      "udp_start_port": 15008,
+      "udp_end_port": 15010,
       "ip_address": "172.20.0.4"
-    }
 
+    }
   }
 }

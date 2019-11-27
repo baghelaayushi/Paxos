@@ -21,12 +21,12 @@ public class MessagingClient {
     public MessagingClient(String destinationAddr, int port) throws IOException {
         this.serverAddress = InetAddress.getByName(destinationAddr);
         this.port = port;
-        Socket = new DatagramSocket(this.port);
+        Socket = new DatagramSocket();
 //        Socket = new DatagramSocket(this.port);
         scanner = new Scanner(System.in);
     }
 
-    public void send(Message message) throws IOException {
+    public void send(Message message, int destinationPort) throws IOException {
         try {
 
 
@@ -36,7 +36,8 @@ public class MessagingClient {
             ObjectOutputStream os = new ObjectOutputStream(outputStream);
             os.writeObject(message);
             byte[] data = outputStream.toByteArray();
-            DatagramPacket sendPacket = new DatagramPacket(data, data.length, this.serverAddress, this.port+1);
+
+            DatagramPacket sendPacket = new DatagramPacket(data, data.length, this.serverAddress, destinationPort);
             Socket.send(sendPacket);
             Socket.close();
 

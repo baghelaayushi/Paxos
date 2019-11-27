@@ -18,9 +18,9 @@ public class PrepareMessage extends Message implements Serializable {
         this.proposalNumber = proposalNumber;
     }
 
-    public PrepareMessage(String proposalNumber, int logSize, int siteNumber){
+    public PrepareMessage(String proposalNumber, int position, int siteNumber){
 
-        super.setLogPosition(logSize);
+        super.setLogPosition(position);
         super.setFrom(siteNumber);
         super.setMessageType(messageType);
         setProposalNumber(proposalNumber);

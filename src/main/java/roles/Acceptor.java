@@ -2,7 +2,6 @@ package roles;
 
 
 import com.google.gson.*;
-import helpers.Event;
 
 import helpers.AcceptedRequest;
 
@@ -126,8 +125,8 @@ public class Acceptor {
                     instance.learner(learnmessage);
                 }
                 else {
-                    MessagingClient mClient = new MessagingClient(destinationAddress, port);
-                    mClient.send(learnmessage);
+                    MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
+                    mClient.send(learnmessage, port);
                     mClient.close();
                 }
             }
@@ -142,10 +141,10 @@ public class Acceptor {
         try {
             String destinationAddress = siteHashMap.get(siteIDMap.get(sender)).getIpAddress();
             int port = siteHashMap.get(siteIDMap.get(sender)).getRandomPort();
-            MessagingClient mClient = new MessagingClient(destinationAddress, port);
+            MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
 
 
-            mClient.send(ack);
+            mClient.send(ack, port);
             mClient.close();
         }
         catch (IOException e){
@@ -171,6 +170,9 @@ public class Acceptor {
             acceptedEntries.put(message.getLogPosition(), new AcceptedRequest(Integer.parseInt(proposed)));
             saveState();
         }
+        AcceptedRequest request = acceptedEntries.get(message.getLogPosition());
+        request.setMaxPrepare(Integer.parseInt(proposed));
+        acceptedEntries.replace(message.getLogPosition(),request);
         int prep = acceptedEntries.get(message.getLogPosition()).getMaxPrepare();
 
         if (Integer.parseInt(proposed) < prep) {
@@ -183,7 +185,6 @@ public class Acceptor {
         ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
         ackmessage.setFrom(site.getSiteNumber());
         ackmessage.setLogPosition(message.getLogPosition());
-
         ackmessage.setMessageType(3);
 
 
@@ -201,7 +202,7 @@ public class Acceptor {
     public void processAcceptRequest(AcceptMessage message) {
 
         int sender = message.getFrom();
-        String proposalNumber[] = message.getCompleteProposalNumber().split("-");
+        String proposalNumber[] = message.getProposalNumber().split("-");
         String proposed = proposalNumber[0] + proposalNumber[1];
 
         PrepareAck ackmessage = new PrepareAck();
@@ -219,6 +220,8 @@ public class Acceptor {
         if (Integer.parseInt(proposed) < prep) {
             //sending max prepare in case of Nack
             ackmessage.setAccNum(String.valueOf(maxPrepare));
+            ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
+//            ackmessage.setLogPosition(message.getLogPosition());
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             ackmessage.setFrom(site.getSiteNumber());
@@ -257,7 +260,6 @@ public class Acceptor {
                                 ") from site " + ackmessage.getFrom());
                         Proposer.valueLearned.add(sender);
                     } else {
-                        System.err.println("% Resetting my own last rounds");
                         Proposer.wonLastRound = false;
                         Proposer.valueLearned = new HashSet<>();
                         System.err.println("% received ack(" + ackmessage.getAccNum() + "," + ackmessage.getAccValue() + "" +

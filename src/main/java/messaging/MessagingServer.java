@@ -1,9 +1,6 @@
 package messaging;
 
-import messaging.helpers.AcceptMessage;
-import messaging.helpers.LearnMessage;
-import messaging.helpers.Message;
-import messaging.helpers.PrepareMessage;
+import messaging.helpers.*;
 import roles.Acceptor;
 import roles.Learner;
 import roles.Proposer;
@@ -23,7 +20,7 @@ public class MessagingServer {
 
     public MessagingServer(int port) throws SocketException, IOException {
         this.port = port;
-        this.udpSocket = new DatagramSocket(this.port+1);
+        this.udpSocket = new DatagramSocket(this.port);
         //need to change this(probably create an object in server class)
     }
 
@@ -54,14 +51,14 @@ public class MessagingServer {
                         //TODO: Go to acceptor
                         break;
                     case 3:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,true);
-                        break;
-                    case 4:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
-                        //TODO: Go to proposer
+                        System.err.println("Case 3");
+                        PrepareAck received =  (PrepareAck) message;
+                        Proposer.getInstance(null,null,null).processProposalAcks(received,received.isAck());
                         break;
                     case 5:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
+                        System.err.println("Case 5");
+                        PrepareAck recvd =  (PrepareAck) message;
+                        Proposer.getInstance(null,null,null).processProposalAcks(recvd,recvd.isAck());
                         //TODO: Go to proposer
                         break;
                     case 6:
@@ -72,6 +69,12 @@ public class MessagingServer {
                         break;
                     case 8:
                         learner.learner((LearnMessage) message);
+                        break;
+                    case 9:
+                        learner.lastLogPointer(message);
+                        break;
+                    case 10:
+                        learner.setPointer((LogPositionMessage) message);
                         break;
                 }
 

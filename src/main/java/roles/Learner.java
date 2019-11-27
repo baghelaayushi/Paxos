@@ -10,7 +10,6 @@ import messaging.MessagingClient;
 import messaging.helpers.*;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class Learner {
     static Learner learner = null;
@@ -22,6 +21,7 @@ public class Learner {
     String[] log = new String[1000];
     boolean[] logCheck = new boolean[1000];
     Site site = null;
+    static int logPositionMax = Integer.MIN_VALUE;
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
 
@@ -29,6 +29,7 @@ public class Learner {
 
 
     public Learner(Site siteInformation, HashMap<String, Site> siteMap,HashMap<Integer,String> siteIDMap){
+        logPositionMax = Integer.MIN_VALUE;
         this.site = siteInformation;
         this.siteHashMap = siteMap;
         this.siteIDMap = siteIDMap;
@@ -84,6 +85,71 @@ public class Learner {
             e.printStackTrace();
         }
 
+        try(FileWriter fw = new FileWriter("saved_flight.json")){
+            Gson gson = new Gson();
+            JsonArray arr = new JsonArray();
+            for(Map.Entry<Integer,Integer> res: flight.entrySet()){
+                JsonObject temp = new JsonObject();
+                JsonArray tempArray = new JsonArray();
+                String ob = gson.toJson(res.getValue());
+                tempArray.add(ob);
+                temp.add(res.getKey().toString(),tempArray);
+                arr.add(temp);
+            }
+            fw.append(gson.toJson(arr));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void lastLogPointer(Message message){
+
+        int position = -1;
+        for (int i = log.length - 1; i >=0 ; i--){
+            if(log[i] != null){
+                position = i;
+                break;
+            }
+        }
+
+        try{
+            Site messageFrom = siteHashMap.get(message.getFrom());
+            MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), site.getRandomPort());
+            client.send(new LogPositionMessage(position, site.getSiteNumber()), messageFrom.getRandomPort());
+            client.close();
+        }catch (Exception e){
+            System.err.println(e.getStackTrace());
+        }
+
+    }
+
+    public void findPointer(){
+        Message message = new Message();
+        message.setFrom(site.getSiteNumber());
+        message.setMessageType(9);
+        for(Map.Entry<String, Site> client :siteHashMap.entrySet()){
+
+
+            try {
+                String destinationAddress = client.getValue().getIpAddress();
+                int port = client.getValue().getRandomPort();
+
+                if(client.getValue().getSiteNumber() != site.getSiteNumber()){
+                    MessagingClient mClient = new MessagingClient(destinationAddress, site.getRandomPort());
+                    mClient.send(message, port);
+                    mClient.close();
+                }
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setPointer(LogPositionMessage message){
+        logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
     }
 
     static void saveState(){
@@ -102,7 +168,9 @@ public class Learner {
 
 
     }
-    public static void getState(){
+
+
+    public static void getLogState(){
         try {
             //convert the json string back to object
             File f = new File("saved_log.json");
@@ -117,8 +185,8 @@ public class Learner {
                 int i = 0;
                 for (JsonElement ob : parsed) {
                     //System.out.println(ob);
-                    if(ob != null)
-                        learner.log[i] = ob.toString();
+                    if(ob != null && !ob.toString().equals("null"))
+                        learner.log[i] = ob.getAsString();
                     i++;
                 }
             }
@@ -127,6 +195,9 @@ public class Learner {
             e.printStackTrace();
         }
 
+    }
+
+    public static void getDictionary(){
         try {
             //convert the json string back to object
             File f = new File("saved_dictionary.json");
@@ -134,11 +205,11 @@ public class Learner {
                 return;
             BufferedReader backup = new BufferedReader(new FileReader("saved_dictionary.json"));
             JsonParser parser = new JsonParser();
-            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            JsonElement parsed = parser.parse(backup);
             Gson gson = new Gson();
             int i =0;
             if(!parsed.isJsonNull()) {
-                for (JsonElement ob : parsed) {
+                for (JsonElement ob : parsed.getAsJsonArray()) {
                     JsonObject temp = ob.getAsJsonObject();
                     Set<String> id = temp.keySet();
                     String myId = "";
@@ -154,22 +225,75 @@ public class Learner {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public static int getCheckPoint(){
+        int checkpoint = 0;
+        try {
+            //convert the json string back to object
+            File f = new File("saved_checkpoint.json");
+            if(!f.exists())
+                return -1;
+            BufferedReader backup = new BufferedReader(new FileReader("saved_checkpoint.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            int i =0;
+            if(!parsed.isJsonNull()) {
+                checkpoint = Integer.parseInt(parsed.get(0).toString());
+            }
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return checkpoint;
+    }
+    public static void getStoredFlights(){
+        try {
+            //convert the json string back to object
+            File f = new File("saved_flight.json");
+            if(!f.exists())
+                return;
+            BufferedReader backup = new BufferedReader(new FileReader("saved_flight.json"));
+            JsonParser parser = new JsonParser();
+            JsonArray parsed = parser.parse(backup).getAsJsonArray();
+            Gson gson = new Gson();
+            int i =0;
+            if(!parsed.isJsonNull()) {
+                for (JsonElement ob : parsed) {
+                    JsonObject temp = ob.getAsJsonObject();
+                    Set<String> id = temp.keySet();
+                    String myId = "";
+                    for (String s : id)
+                        myId = s;
+
+                    JsonArray array = temp.getAsJsonArray(myId);
+                    JsonElement obj = array.get(0);
+                    flight.replace(Integer.parseInt(myId), Integer.parseInt(obj.getAsString()));
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    public static void getState(){
 
 
+        getLogState();
+        getDictionary();
+        getStoredFlights();
+        int checkpoint = getCheckPoint();
+        if(checkpoint!=-1) {
+            learner.findPointer();
+            learner.learnLogsRecovery(checkpoint, logPositionMax);
+        }
+    }
 
-    private void learnLogs(int currentPosition){
+    private void learnLogsRecovery(int currentPosition, int tillPosition){
 
         //Run the synod algorithm for all positions
-        int start = 0;
-        int offSet = currentPosition % 5;
-        int lowerBound = currentPosition - offSet;
-        if(log[lowerBound] != null){
-            start = lowerBound;
-        }
-        for (int i = start; i < currentPosition; i++){
+        for (int i = currentPosition; i < tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
@@ -181,9 +305,33 @@ public class Learner {
             }
         }
 
+    }
 
 
+    private void learnLogs(int currentPosition){
 
+        //Run the synod algorithm for all positions
+        int start = 0;
+        int offSet = currentPosition % 5;
+        int lowerBound = currentPosition - offSet;
+        if(log[lowerBound] != null){
+            start = lowerBound;
+        }
+        for (int i = start; i <= currentPosition; i++){
+            if(log[i] == null){
+                //There's a hole, run synod
+                System.err.println("% Filling a hole at"+ i);
+                Proposer.valueLearned = new HashSet<>();
+                Proposer.approvalFrom = new HashSet<>();
+                Proposer.wonLastRound = false;
+                Proposer.getInstance(null, null, null)
+                        .initiateProposal("reserve test -1,-1","",i);
+                Proposer.wonLastRound = false;
+
+                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
+
+            }
+        }
 
     }
 
@@ -212,6 +360,8 @@ public class Learner {
                     if((requestedLogPosition+1)%5 == 0){
                         System.err.println("% checkpointing at log position" + requestedLogPosition);
                         new Thread(()->learnLogs(requestedLogPosition)).start();
+                        saveDictionary(requestedLogPosition);
+
                     }
                     new Thread(()-> updateDictionary(accVal)).start();
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
