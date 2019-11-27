@@ -149,7 +149,10 @@ public class Learner {
     }
 
     public void setPointer(LogPositionMessage message){
+        System.err.println(logPositionMax + " " + message.getLogPosition());
         logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
+        System.err.println(logPositionMax + " " + message.getLogPosition());
+
     }
 
     static void saveState(){
@@ -284,7 +287,11 @@ public class Learner {
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
-        if(checkpoint!=-1) {
+        System.err.println("Checkpoint"+checkpoint);
+        learner.findPointer();
+        if(checkpoint == -1 ) {
+            learner.learnLogsRecovery(0, logPositionMax);
+        }else{
             learner.findPointer();
             learner.learnLogsRecovery(checkpoint, logPositionMax);
         }
@@ -316,12 +323,7 @@ public class Learner {
     private void learnLogs(int currentPosition){
 
         //Run the synod algorithm for all positions
-        int start = 0;
-        int offSet = currentPosition % 5;
-        int lowerBound = currentPosition - offSet;
-        if(log[lowerBound] != null){
-            start = lowerBound;
-        }
+        int start = getStart(currentPosition);
         for (int i = start; i <= currentPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
@@ -338,6 +340,16 @@ public class Learner {
             }
         }
 
+    }
+
+    private int getStart(int currentPosition) {
+        int start = 0;
+        int offSet = currentPosition % 5;
+        int lowerBound = currentPosition - offSet;
+        if(log[lowerBound] != null){
+            start = lowerBound;
+        }
+        return start;
     }
 
 
@@ -368,9 +380,9 @@ public class Learner {
                         saveDictionary(requestedLogPosition);
 
                     }
-                    else if(log[5*((requestedLogPosition+1)/5)-1].equals("null" )){
+                    else if(log[getStart(requestedLogPosition+1)].equals("null")){
                         System.err.println("% checkpointing at log position" + requestedLogPosition);
-                        new Thread(()->learnLogs(5*((requestedLogPosition+1)/5)-1)).start();
+                        new Thread(()->learnLogs(getStart(requestedLogPosition+1))).start();
                         saveDictionary(requestedLogPosition);
                     }
                     new Thread(()-> updateDictionary(accVal)).start();
