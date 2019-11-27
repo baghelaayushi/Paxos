@@ -10,6 +10,10 @@ import messaging.MessagingClient;
 import messaging.helpers.*;
 
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class Learner {
     static Learner learner = null;
@@ -21,7 +25,7 @@ public class Learner {
     String[] log = new String[1000];
     boolean[] logCheck = new boolean[1000];
     Site site = null;
-    static int logPositionMax = Integer.MIN_VALUE;
+    int logPositionMax = Integer.MIN_VALUE;
 
     static TreeMap<String, String> reservationMap = new TreeMap<>();
 
@@ -116,6 +120,7 @@ public class Learner {
 
         try{
             Site messageFrom = siteHashMap.get(siteIDMap.get(message.getFrom()));
+            System.out.println("Sending to "+ messageFrom.getIpAddress() + " " + messageFrom.getRandomPort());
             MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), site.getRandomPort());
             client.send(new LogPositionMessage(position, site.getSiteNumber()), messageFrom.getRandomPort());
             client.close();
@@ -149,7 +154,7 @@ public class Learner {
     }
 
     public void setPointer(LogPositionMessage message){
-        logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
+        this.logPositionMax = Integer.max(logPositionMax,message.getLogPosition());
     }
 
     static void saveState(){
@@ -277,24 +282,33 @@ public class Learner {
         }
     }
 
-    public static void getState(){
+    public void getState(){
 
-
+        learner.findPointer();
         getLogState();
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
-
-        if(checkpoint != -1) {
-            learner.findPointer();
-            learner.learnLogsRecovery(checkpoint, logPositionMax);
+        if(checkpoint == -1) {
+            learner.learnLogsRecovery(0, this.logPositionMax);
+        }else{
+            learner.learnLogsRecovery(checkpoint, this.logPositionMax);
         }
     }
 
     private void learnLogsRecovery(int currentPosition, int tillPosition){
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<String> future = executor.submit(new Tasks());
+        try{
+            future.get(50, TimeUnit.MILLISECONDS);
+        }catch (Exception e){
+            future.cancel(true);
+        }
+        executor.shutdownNow();
+
         //Run the synod algorithm for all positions
-        System.out.println("Running from "+ currentPosition +" " + tillPosition);
+//        System.out.println("Running from "+ currentPosition +" " + tillPosition);
         for (int i = currentPosition; i <= tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod

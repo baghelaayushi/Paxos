@@ -171,20 +171,26 @@ public class Proposer {
     public void initiateProposal(String reservation, String method, int position){
 
         HashMap<Integer,Integer> flights = Learner.getInstance().getFlights();
-        if(reservation.split(" ")[0].equals("reserve")) {
-            String requiredFlights[] = reservation.split(" ")[2].split(",");
-            for (String s : requiredFlights) {
-                if (flights.get(Integer.parseInt(s)) <= 0) {
-                    System.out.println("Can't place reservation");
+
+        try {
+
+
+            if (reservation.split(" ")[0].equals("reserve")) {
+                String requiredFlights[] = reservation.split(" ")[2].split(",");
+                for (String s : requiredFlights) {
+                    if (flights.get(Integer.parseInt(s)) <= 0) {
+                        System.out.println("Can't place reservation");
+                        return;
+                    }
+                }
+            } else {
+                if (!Learner.reservationMap.containsKey(reservation.split(" ")[1])) {
+                    System.out.println("can't cancel reservation");
                     return;
                 }
+
             }
-        }
-        else {
-            if(!Learner.reservationMap.containsKey(reservation.split(" ")[1])){
-                System.out.println("can't cancel reservation");
-                return;
-            }
+        }catch (Exception e){
 
         }
 

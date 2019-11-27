@@ -80,12 +80,15 @@ public class Server {
 //        System.out.println("Starting local server at "+ mySite.getRandomPort());
         MessagingServer server = new MessagingServer(mySite.getRandomPort());
 
-        new Thread(()-> learner = Learner.getInstance(mySite,siteHashMap,siteIDMap)).start();
+        new Thread(()-> {
+            learner = Learner.getInstance(mySite,siteHashMap,siteIDMap);
+            learner.getState();
+
+        }).start();
         new Thread(()-> proposer = Proposer.getInstance(mySite,log, siteHashMap)).start();
         new Thread(()-> acceptor = Acceptor.getInstance(mySite,siteHashMap,siteIDMap)).start();
 
         Acceptor.getState();
-        Learner.getState();
         Proposer.getState();
 
 
