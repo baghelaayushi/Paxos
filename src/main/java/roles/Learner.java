@@ -368,6 +368,11 @@ public class Learner {
                         saveDictionary(requestedLogPosition);
 
                     }
+                    else if(log[5*((requestedLogPosition+1)/5)-1].equals("null" )){
+                        System.err.println("% checkpointing at log position" + requestedLogPosition);
+                        new Thread(()->learnLogs(5*((requestedLogPosition+1)/5)-1)).start();
+                        saveDictionary(requestedLogPosition);
+                    }
                     new Thread(()-> updateDictionary(accVal)).start();
                     System.err.println("% committing " + accVal + " at log position" + requestedLogPosition);
                     new Thread(Learner::saveState).start();
