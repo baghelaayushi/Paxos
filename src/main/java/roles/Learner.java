@@ -285,11 +285,7 @@ public class Learner {
         getStoredFlights();
         int checkpoint = getCheckPoint();
 
-        if(checkpoint == -1) {
-
-            learner.findPointer();
-            learner.learnLogsRecovery(0, logPositionMax);
-        }else{
+        if(checkpoint != -1) {
             learner.findPointer();
             learner.learnLogsRecovery(checkpoint, logPositionMax);
         }
@@ -298,6 +294,7 @@ public class Learner {
     private void learnLogsRecovery(int currentPosition, int tillPosition){
 
         //Run the synod algorithm for all positions
+        System.out.println("Running from "+ currentPosition +" " + tillPosition);
         for (int i = currentPosition; i <= tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
