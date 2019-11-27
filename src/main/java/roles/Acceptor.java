@@ -83,7 +83,7 @@ public class Acceptor {
                 Gson gson = new Gson();
                 for(JsonElement ob: parsed) {
                     JsonObject temp = ob.getAsJsonObject();
-                    System.out.println(temp);
+//                    System.out.println(temp);
                     Set<String> id = temp.keySet();
                     String myId = "";
                     for (String s : id)

@@ -115,7 +115,7 @@ public class Learner {
         }
 
         try{
-            Site messageFrom = siteHashMap.get(message.getFrom());
+            Site messageFrom = siteHashMap.get(siteIDMap.get(message.getFrom()));
             MessagingClient client = new MessagingClient(messageFrom.getIpAddress(), site.getRandomPort());
             client.send(new LogPositionMessage(position, site.getSiteNumber()), messageFrom.getRandomPort());
             client.close();
@@ -287,9 +287,12 @@ public class Learner {
         getDictionary();
         getStoredFlights();
         int checkpoint = getCheckPoint();
+
         System.err.println("Checkpoint"+checkpoint);
-        learner.findPointer();
-        if(checkpoint == -1 ) {
+
+        if(checkpoint == -1) {
+
+            learner.findPointer();
             learner.learnLogsRecovery(0, logPositionMax);
         }else{
             learner.findPointer();
@@ -300,6 +303,7 @@ public class Learner {
     private void learnLogsRecovery(int currentPosition, int tillPosition){
 
         //Run the synod algorithm for all positions
+        System.err.println("% Filling a holes");
         for (int i = currentPosition; i <= tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod

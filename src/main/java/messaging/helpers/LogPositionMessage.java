@@ -18,6 +18,7 @@ public class LogPositionMessage extends Message {
 
     public LogPositionMessage(int logPosition, int from){
         super.setMessageType(10);
+        this.setLogPosition(10);
         super.setFrom(from);
         this.logPosition = logPosition;
     }
