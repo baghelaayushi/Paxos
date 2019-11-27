@@ -293,14 +293,14 @@ public class Learner {
     private void learnLogsRecovery(int currentPosition, int tillPosition){
 
         //Run the synod algorithm for all positions
-        for (int i = currentPosition; i < tillPosition; i++){
+        for (int i = currentPosition; i <= tillPosition; i++){
             if(log[i] == null){
                 //There's a hole, run synod
                 System.err.println("% Filling a hole at"+ i);
                 Proposer.getInstance(null, null, null)
                         .initiateProposal("reserve test -1,-1","",i);
                 Proposer.wonLastRound = false;
-                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");;
+                System.err.println("%%%%%%%%%%%%%%%%%%%%%%");
 
             }
         }

@@ -224,6 +224,7 @@ public class Acceptor {
             ackmessage.setMessageType(5);
             ackmessage.setAck(false);
             ackmessage.setFrom(site.getSiteNumber());
+            ackmessage.setAccValue(acceptedEntries.get(message.getLogPosition()).getAccVal());
 
             if(sender == site.getSiteNumber()){
 
