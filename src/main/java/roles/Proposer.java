@@ -171,15 +171,23 @@ public class Proposer {
     public void initiateProposal(String reservation, String method, int position){
 
         HashMap<Integer,Integer> flights = Learner.getInstance().getFlights();
-        String requiredFlights[] = reservation.split(" ")[2].split(",");
         if(reservation.split(" ")[0].equals("reserve")) {
+            String requiredFlights[] = reservation.split(" ")[2].split(",");
             for (String s : requiredFlights) {
                 if (flights.get(Integer.parseInt(s)) <= 0) {
-                    System.err.println("Can't place reservation");
+                    System.out.println("Can't place reservation");
                     return;
                 }
             }
         }
+        else {
+            if(!Learner.reservationMap.containsKey(reservation.split(" ")[1])){
+                System.out.println("can't cancel reservation");
+                return;
+            }
+
+        }
+
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Tasks());
@@ -228,7 +236,6 @@ public class Proposer {
             future.cancel(true);
         }
 
-        System.err.println("% Is there still a null?");
         if(Learner.getLog()[position] == null)
             reAttempt(executor, future, position);
         if(Learner.getLog()[position] == null)
@@ -295,10 +302,7 @@ public class Proposer {
 
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
-            System.err.println("% Was rejected, reproposing with a higher value "
-                    + prepareMessage.getOriginalValue()
-                    + " max Prop should be atleast "+ prepareMessage.getAccNum() +
-                    "for position "+ prepareMessage.getLogPosition());
+            System.err.println("% Was rejected, reproposing with a higher value");
 
             proposalNumbers[prepareMessage.getLogPosition()] += Integer.parseInt(prepareMessage.getAccNum());
             saveState();
