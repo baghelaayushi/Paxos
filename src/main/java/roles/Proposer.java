@@ -27,9 +27,7 @@ public class Proposer {
     static Proposer instance = null;
 
     Site site = null;
-    String latestProposalCombination = "";
     HashMap<String, Site> siteHashMap = null;
-    String currentValue = null;
     static HashSet<Integer> approvalFrom = new HashSet<Integer>();
 
     static HashMap<ValuePos, List<Integer>> approvalMap = new HashMap<>();
@@ -41,7 +39,7 @@ public class Proposer {
 
     int[] proposalNumbers = new int[1000];
     String[] proposalCombinations = new String[1000];
-    String[] proposalValues = new String[1000];
+    String[] proposalValues;
 
 
     public Proposer(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
@@ -49,7 +47,8 @@ public class Proposer {
         //TODO:System could have crashed, check that.
         this.site = siteInformation;
         this.siteHashMap = siteMap;
-        proposalNumbers = new int[1000];
+        this.proposalNumbers = new int[1000];
+        this.proposalValues = new String[1000];
     }
     public static Proposer getInstance(Site siteInformation, List<String> log, HashMap<String, Site> siteMap){
         if (instance == null){
@@ -60,11 +59,9 @@ public class Proposer {
 
     private String getProposalNumber(int logPosition){
 
-//        maxProposalNumber++;
         proposalNumbers[logPosition]++;
         saveState();
         String proposalNumber = proposalNumbers[logPosition] +"-"+site.getSiteNumber();
-        latestProposalCombination = proposalNumber;
         proposalCombinations[logPosition] = proposalNumber;
         return proposalNumber;
     }
@@ -134,6 +131,7 @@ public class Proposer {
 
                 //to send a propose message to acceptor
                 if(stage == 1){
+                    System.err.println("%-Sending position as "+ position);
                     PrepareMessage message = new PrepareMessage(proposalNumber, position, site.getSiteNumber());
 
                     if(client.getValue().getSiteNumber() == site.getSiteNumber()){
@@ -291,24 +289,23 @@ public class Proposer {
         }
     }
 
-    public void processProposalAcks(Message ack, boolean wasSupported){
+    public void processProposalAcks(PrepareAck prepareMessage, boolean wasSupported){
 
         if(!wasSupported){
             //TODO:Proposal was denied, need to propose with a bigger proposal num
-            PrepareAck message = (PrepareAck) ack;
             System.err.println("% Was rejected, reproposing with a higher value "
-                    + ack.getOriginalValue()
-                    + " max Prop should be atleast "+ message.getAccNum() +
-                    "for position "+ message.getLogPosition());
+                    + prepareMessage.getOriginalValue()
+                    + " max Prop should be atleast "+ prepareMessage.getAccNum() +
+                    "for position "+ prepareMessage.getLogPosition());
 
-            proposalNumbers[message.getLogPosition()] += Integer.parseInt(message.getAccNum());
+            proposalNumbers[prepareMessage.getLogPosition()] += Integer.parseInt(prepareMessage.getAccNum());
             saveState();
-            initiateProposal(proposalValues[message.getLogPosition()],"",message.getLogPosition());
+            System.err.println("Proposal is "+ proposalValues[prepareMessage.getLogPosition()]);
+            initiateProposal(proposalValues[prepareMessage.getLogPosition()],"",prepareMessage.getLogPosition());
 
 
         }else{
             //TODO: Add to the set
-            PrepareAck prepareMessage = (PrepareAck)ack;
 
 
             approvalFrom.add(prepareMessage.getFrom());
@@ -327,10 +324,6 @@ public class Proposer {
                 if(maxRecvdAckNum != -1){
                     if(Integer.parseInt(proposed) >= maxRecvdAckNum){
                         maxRecvdAckNum = Integer.parseInt(proposed);
-                        System.err.println("Updating from "+
-                                proposalValues[prepareMessage.getLogPosition()]+
-                                "to" +
-                                prepareMessage.getAccValue());
                         proposalValues[prepareMessage.getLogPosition()] = prepareMessage.getAccValue();
 
                         //Reset approvals
@@ -339,10 +332,6 @@ public class Proposer {
                 }else{
                     //Yes it is
                     maxRecvdAckNum = Integer.parseInt(prepareMessage.getAccNum());
-                    System.err.println("Updating from "+
-                            proposalValues[prepareMessage.getLogPosition()]+
-                            "to" +
-                            prepareMessage.getAccValue());
                     proposalValues[prepareMessage.getLogPosition()] = prepareMessage.getAccValue();
 
                 }
@@ -351,9 +340,9 @@ public class Proposer {
 
             if(approvalFrom.size() > siteHashMap.size()/2 && !acceptSent){
 
-                System.err.println("% received accept messages from a majority with" + proposalValues[ack.getLogPosition()]);
+                System.err.println("% received accept messages from a majority with" + proposalValues[prepareMessage.getLogPosition()]);
 //                if(prepareMessage.getFrom() != site.getSiteNumber())
-                    sendMessages(2,ack.getLogPosition());
+                    sendMessages(2,prepareMessage.getLogPosition());
 
                 acceptSent = true;
 

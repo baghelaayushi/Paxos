@@ -51,14 +51,14 @@ public class MessagingServer {
                         //TODO: Go to acceptor
                         break;
                     case 3:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,true);
-                        break;
-                    case 4:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
-                        //TODO: Go to proposer
+                        System.err.println("Case 3");
+                        PrepareAck received =  (PrepareAck) message;
+                        Proposer.getInstance(null,null,null).processProposalAcks(received,received.isAck());
                         break;
                     case 5:
-                        Proposer.getInstance(null,null,null).processProposalAcks(message,false);
+                        System.err.println("Case 5");
+                        PrepareAck recvd =  (PrepareAck) message;
+                        Proposer.getInstance(null,null,null).processProposalAcks(recvd,recvd.isAck());
                         //TODO: Go to proposer
                         break;
                     case 6:
